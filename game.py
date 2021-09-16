@@ -74,6 +74,7 @@ WIN.blit(bg,(0,0))
 
 
 pyg.display.set_caption("Khet")
+pyg.display.set_icon(pyg.image.load("silver_obelisk_double.png"))
 WHITE = (255, 255, 255)
 GREY = (128, 128, 128)
 YELLOW = (204, 204, 0)
@@ -128,55 +129,59 @@ def make_grid(rows,cols, width):
 def laser_shooter(player_colour, board):
     hit_target = False
     laser_start_tile = [(0,0), (7, 9)]
-    orients = ["N", "E", "S", "W"]
     laser_start_orientation = ["S", "N"]
+
+    orients = ["N", "E", "S", "W"]
     orientation_val = [(0, -1), (1, 0), (0, 1), (-1, 0)]
-    pyramid_facings = [("N", "E"), ("S", "E"), ("S", "W"), ("N", "W")]
+    pyramid_facings = ["NE", "SE", "SW", "NW"]
+    pyramid_orientations = [("N", "E"), ("S", "E"), ("S", "W"), ("N", "W")]
+
     cur_tile = laser_start_tile[player_colour]
     cur_orientation = laser_start_orientation[player_colour]
     while not hit_target:
         try:
-            next_tile = numpy.add(cur_tile, orientation_val(orients.index(cur_orientation)))
-            if board[next_tile]==None:
+            next_tile = numpy.add(cur_tile, orientation_val[orients.index(cur_orientation)])
+            if board[next_tile] == None:
                 #Laser stuff for empty tile
                 cur_tile = next_tile
                 #Draw laser with current orientation
                 #Play sound
-            elif board[next_tile].type==pyr:
+            elif board[next_tile].type == "pyr":
                 #Laser stuff for pyramids
-                if cur_orientation in board[next_tile].facing:
+                if cur_orientation in pyramid_orientations[pyramid_facings.index(board[next_tile].facing)]:
                     #Change laser direction
+                    cur_orientation = pyramid_orientations[pyramid_facings.index(board[next_tile].facing)].remove(cur_orientation)
                     #Draw laser bounce
                     #Play sound
                 else:
                     #Destroy piece
                     #End laser function
                     hit_target = True
-            elif board[next_tile].type==dj:
+            elif board[next_tile].type == "dj":
                 #Laser stuff for djeds
                 #Change laser direction
                 #Draw bounce
                 #Play sound
             else:
                 #Laser stuff for Pharoahs and Obelisks
-                # Destroy piece
-                # End laser function
+                #Destroy piece
+                destroy_piece(next_tile, board)
+                #End laser function
                 hit_target = True
         except:
+            #Draw the wall impact
             hit_target = True
 
 def destroy_piece(coordinates, board):
     #Remove piece from board
-    if board[coordinates].type == pha:
-        victory_function()
+    if board[coordinates].type == "pha":
+        # Play victory sound
+        # Set screen to victory screen with restart button
     #Draw board again
+    #Play sound
     #Set other player's turn
 
-def victory_function():
-    #Play Sound
-    #Set screen to victory screen with restart button
-'''
-
+"""
 def update_display(win, grid, rows,cols, width):
     for row in grid:
         for spot in row:
