@@ -61,12 +61,17 @@ class Node:
         scale = 1000/1600
         self.row = col
         self.col = row
-        self.x = 115*scale+2
-        self.y = 110*scale+1
+
+        self.piece_width = int(128 * scale) - 2
+        self.piece_height = int(128 * scale) - 4
+
+        self.x = 115*scale+2 + row*(self.piece_width + 8.2)
+        self.y = 110*scale+1 + col*(self.piece_height + 7.8)
+
         self.colour = WHITE
         self.occupied = None
 
-        self.piece_width = int(128*scale)-2
+        self.piece_width = int(128*scale)-1
         self.piece_height = int(128*scale)-4
 
     def setup(self, WIN):
@@ -75,9 +80,8 @@ class Node:
                 pass
             else:
                 piece_img = classic_starting[(self.row, self.col)]
-                piece_img = pyg.transform.smoothscale(piece_img, self.piece_width,self.]=42
-                piece_height))
-                
+                piece_img = pyg.transform.smoothscale(piece_img, (self.piece_width,self.piece_height))
+
                 WIN.blit(piece_img, (self.x, self.y))
 
 
