@@ -1,17 +1,5 @@
 import pygame as pyg
-from PIL import Image
 import sys
-
-
-def rotate_90_r(image):
-    img = Image.open(image)
-    rotate_img = img.rotate(-90)
-    rotate_img.save(image)
-
-def rotate_90_l(image):
-    img = Image.open(image)
-    rotate_img = img.rotate(90)
-    rotate_img.save(image)
 
 
 class Piece:
@@ -22,8 +10,8 @@ class Piece:
         self.image = image1
 
 
-spyr = Piece('s','pyr','','silver_pyramid_NE.png')
-rpyr = Piece('r','pyr','','red_pyramid_NE.png')
+spyr = Piece('s','pyr','','silver_pyramid_NE.png','silver_pyramid_SE','silver_pyramid_SW','silver_pyramid_NW')
+rpyr = Piece('r','pyr','','red_pyramid_NE.png','red_pyramid_SE','red_pyramid_SW','red_pyramid_NW')
 sdj = Piece('s','dj','','silver_jed_NE_SW.png')
 rdj = Piece('r','dj','','red_jed_NE_SW.png')
 sob = Piece('s','ob','','silver_obelisk_single.png')
@@ -56,7 +44,7 @@ WIDTH = 1000
 HEIGHT = int((WIDTH/10)*8)
 WIN = pyg.display.set_mode((WIDTH, HEIGHT))
 bg = pyg.image.load("board.png")
-bg = pyg.transform.scale(bg, (WIDTH, HEIGHT))
+bg = pyg.transform.smoothscale(bg, (WIDTH, HEIGHT))
 WIN.blit(bg,(0,0))
 
 
@@ -70,12 +58,16 @@ BLACK = (0, 0, 0)
 
 class Node:
     def __init__(self, row, col, width):
+        scale = 1000/1600
         self.row = col
         self.col = row
-        self.x = int(row * width)
-        self.y = int(col * width)
+        self.x = 115*scale+2
+        self.y = 110*scale+1
         self.colour = WHITE
         self.occupied = None
+
+        self.piece_width = int(128*scale)-2
+        self.piece_height = int(128*scale)-4
 
     def setup(self, WIN):
         if classic_starting[(self.row, self.col)]:
@@ -83,7 +75,9 @@ class Node:
                 pass
             else:
                 piece_img = classic_starting[(self.row, self.col)]
-                piece_img = pyg.transform.scale(piece_img, (int(128*(1000/1600)),int(128*(1000/1600))))
+                piece_img = pyg.transform.smoothscale(piece_img, self.piece_width,self.]=42
+                piece_height))
+                
                 WIN.blit(piece_img, (self.x, self.y))
 
 
