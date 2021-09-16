@@ -100,6 +100,25 @@ def make_grid(rows,cols, width):
     return grid
 
 
+def laser_shooter(player_colour, board):
+    hit_target = False
+    laser_start_tile = [(0,0), (7, 9)]
+    laser_start_orientation = [(3), (1)]
+    orientation_val = [-1, 1, 1, -1]
+    cur_tile = laser_start_tile[player_colour]
+    cur_orientation = laser_start_orientation[player_colour]
+        while not hit_target:
+            next_tile = [cur_tile[0] - orientation_val[cur_orientation], cur_tile[1] - orientation_val[cur_orientation]]
+            if board[next_tile[0], next_tile[1]]==None:
+                #Laser stuff for empty tile
+            elif board[next_tile[0], next_tile[1]].type==pyr:
+                #Laser stuff for pyramids
+            elif board[next_tile[0], next_tile[1]].type==dj:
+                #Laser stuff for djeds
+            else:
+                #Laser stuff for Pharoahs and Obelisks
+
+
 def update_display(win, grid, rows,cols, width):
     for row in grid:
         for spot in row:
