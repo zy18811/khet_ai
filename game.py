@@ -165,6 +165,18 @@ def laser_shooter(player_colour, board):
         except:
             hit_target = True
 
+def destroy_piece(coordinates, board):
+    #Remove piece from board
+    if board[coordinates].type == pha:
+        victory_function()
+    #Draw board again
+    #Set other player's turn
+
+def victory_function():
+    #Play Sound
+    #Set screen to victory screen with restart button
+'''
+
 def update_display(win, grid, rows,cols, width):
     for row in grid:
         for spot in row:
