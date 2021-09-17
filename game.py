@@ -1,4 +1,5 @@
 import pygame as pyg
+pyg.init()
 import numpy
 import sys
 
@@ -81,6 +82,9 @@ YELLOW = (204, 204, 0)
 BLUE = (50, 255, 255)
 BLACK = (0, 0, 0)
 
+#Music
+pyg.mixer.music.load('music.wav')
+pyg.mixer.music.play(-1)
 
 class Node:
     def __init__(self, row, col, width):
