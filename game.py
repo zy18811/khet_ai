@@ -34,7 +34,6 @@ spha = Piece('s','pha','','silver_pharoah.png')
 rpha = Piece('r','pha','','red_pharoah.png')
 
 
-
 classic_starting = {(0,0):None, (0,1):None, (0,2):None, (0,3):None, (0,4):pyg.image.load(rsob.image), (0,5):pyg.image.load(rpha.image),
                     (0,6):pyg.image.load(rsob.image), (0,7):pyg.image.load(rpyr_SE.image), (0,8):None, (0,9):None,
                     (1,0):None,(1, 1):None, (1, 2):pyg.image.load(rpyr_SW.image), (1, 3):None, (1,4):None, (1,5):None,
@@ -60,16 +59,12 @@ classic_board = [[0,0,0,0,rsob,rpha,rsob,rpyr_SE,0,0],
                  [rpyr_SE,0,spyr_NW,0,sdj_NW_SE,sdj_NE_SW,0,rpyr_NE,0,spyr_SW],
                  [0,0,0,0,0,0,rpyr_SE,0,0,0],
                  [0,0,0,0,0,0,0,spyr_NE,0,0],
-                 [0,0,spyr_NW,ssob,spha,ssob,]]
-
-
+                 [0,0,spyr_NW,ssob,spha,ssob,0,0,0,0]]
 
 WIDTH = 1000
 HEIGHT = int((WIDTH/10)*8)
 WIN = pyg.display.set_mode((WIDTH, HEIGHT))
-bg = pyg.image.load("board.png")
-bg = pyg.transform.smoothscale(bg, (WIDTH, HEIGHT))
-WIN.blit(bg,(0,0))
+
 
 
 pyg.display.set_caption("Khet")
@@ -81,7 +76,7 @@ BLACK = (0, 0, 0)
 
 
 class Node:
-    def __init__(self, row, col, width):
+    def __init__(self, row, col):
         scale = 1000/1600
         self.row = col
         self.col = row
@@ -92,30 +87,35 @@ class Node:
         self.x = 115*scale+2 + row*(self.piece_width + 8.2)
         self.y = 110*scale+1 + col*(self.piece_height + 7.8)
 
-        self.colour = WHITE
-        self.occupied = None
-
         self.piece_width = int(128*scale)-1
         self.piece_height = int(128*scale)-4
+        self.image = None
+        self.occupied = 0
+
 
     def setup(self, WIN):
         if classic_starting[(self.row, self.col)]:
             if classic_starting[(self.row, self.col)] is None:
-                pass
+                self.image = None
             else:
+                self.occupied = 1
+
                 piece_img = classic_starting[(self.row, self.col)]
+
+
+
                 piece_img = pyg.transform.smoothscale(piece_img, (self.piece_width,self.piece_height))
+                self.image = piece_img
 
                 WIN.blit(piece_img, (self.x, self.y))
 
 
 def make_grid(rows,cols, width):
     grid = []
-    gap = width // cols
     for i in range(rows):
         grid.append([])
         for j in range(cols):
-            node = Node(j, i, gap)
+            node = Node(j, i)
             grid[i].append(node)
             """
             if (i+j)%2 ==1:
@@ -143,7 +143,8 @@ def laser_shooter(player_colour, board):
                 #Laser stuff for Pharoahs and Obelisks
 """
 
-def update_display(win, grid, rows,cols, width):
+
+def update_display(win, grid):
     for row in grid:
         for spot in row:
             spot.setup(win)
@@ -165,16 +166,52 @@ def find_node(pos,cols,rows):
             end_y = 110*scale+1 + i*(piece_height + 7.8)
             if x > start_x and y > start_y:
                 if x < end_x and y < end_y:
-                    return (j,i)
+                    return (j-1,i-1)
 
 
-def get_piece_from_coords():
-    pass
+def get_piece_from_coords(board,x,y):
+    piece = board[y][x]
+    return piece
 
 
+def Do_Move(OriginalPos, FinalPosition, WIN):
+    classic_starting[FinalPosition] = classic_starting[OriginalPos]
+    classic_starting[OriginalPos] = None
+
+
+def clear_node(x,y):
+    classic_starting[(y,x)] = None
+
+
+def get_pos_4_coords(x,y):
+    scale = 1000 / 1600
+    piece_width = int(128 * scale) - 1
+    piece_height = int(128 * scale) - 4
+    x_pos = 115 * scale + 2 + x * (piece_width + 8.2)
+    y_pos = 110 * scale + 1 + y * (piece_height + 7.8)
+    return x_pos,y_pos
+
+
+def refresh_display(win, grid):
+    bg = pyg.image.load("board.png")
+    bg = pyg.transform.smoothscale(bg, (WIDTH, HEIGHT))
+    WIN.blit(bg, (0, 0))
+    update_display(win,grid)
+
+def set_board_image(x,y,image):
+    classic_starting[(y,x)] = image
 
 def main(WIN, WIDTH):
+    scale = 1000 / 1600
+    piece_width = int(128 * scale) - 1
+    piece_height = int(128 * scale) - 4
+
     grid = make_grid(8,10, WIDTH)
+
+    dragged_piece = None
+    drag_x = None
+    drag_y = None
+
     while True:
         pyg.time.delay(50)  ##stops cpu dying
         for event in pyg.event.get():
@@ -183,9 +220,31 @@ def main(WIN, WIDTH):
                 sys.exit()
             if event.type == pyg.MOUSEBUTTONDOWN:
                 pos = pyg.mouse.get_pos()
-                print(find_node(pos,10,8))
+                drag_x,drag_y = pos
+                x,y = find_node(pos,10,8)
+                piece = get_piece_from_coords(classic_board,x,y)
+                node = grid[y][x]
+                dragged_piece = node
+                clear_node(x, y)
+            if event.type == pyg.MOUSEMOTION:
+                if dragged_piece is not None:
+                    drag_x,drag_y = pyg.mouse.get_pos()
+            if event.type == pyg.MOUSEBUTTONUP:
+                if dragged_piece is not None:
+                    pos = pyg.mouse.get_pos()
+                    x,y = find_node(pos,10,8)
+                    set_board_image(x,y,dragged_piece.image)
+                    dragged_piece = None
 
-            update_display(WIN, grid, 8,10, WIDTH)
+
+            refresh_display(WIN, grid)
+            if dragged_piece is not None:
+                if dragged_piece.image is not None:
+                    WIN.blit(dragged_piece.image, (drag_x-piece_width/2, drag_y-piece_height/2))
+                pyg.display.flip()
+            else:
+                pass
+
 
 
 if __name__ == '__main__':
