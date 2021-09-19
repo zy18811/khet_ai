@@ -553,7 +553,7 @@ def main(WIN, WIDTH):
                         if current_p == 's':
                             if pos[0] > 880 and pos[1] > 765:
                                 if pos[0] < 900 and pos[1] < 785:
-                                    print("silver lazer")
+                                    #print("silver lazer")
                                     hit_x, hit_y = laser_shooter(1,classic_board)
 
                                     laser_fired = True
