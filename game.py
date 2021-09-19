@@ -235,23 +235,26 @@ def laser_shooter(player_colour, board):
                     return y, x
 
             elif board[x][y].type == "dj":
+
                 #Laser stuff for Djeds
                 #Change laser direction
                 if cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
                     ori_arr = [e for e in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]]
                     ori_arr.remove(cur_orientation)
                     cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
-                elif cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)+2]:
-                    ori_arr = [e for e in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]]
+                    pic_facing = ''.join(pyramid_orientations[pyramid_facings.index(board[x][y].facing)])
+                elif cur_orientation in pyramid_orientations[(pyramid_facings.index(board[x][y].facing)+2)%4]:
+                    ori_arr = [e for e in pyramid_orientations[(pyramid_facings.index(board[x][y].facing)+2)%4]]
                     ori_arr.remove(cur_orientation)
                     cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
-
+                    pic_facing = ''.join(pyramid_orientations[(pyramid_facings.index(board[x][y].facing)+2)%4])
                 cur_tile = next_tile
+
                 #Draw bounce
                 if super_board[x][y] != 0:
-                    super_super_board[x][y] = "laser_%s.png" % board[x][y].facing
+                    super_super_board[x][y] = "laser_%s.png" % pic_facing
                 else:
-                    super_board[x][y] = "laser_%s.png" % board[x][y].facing
+                    super_board[x][y] = "laser_%s.png" % pic_facing
                 #Play sound
             else:
                 #Laser stuff for Pharoahs and Obelisks
@@ -261,9 +264,9 @@ def laser_shooter(player_colour, board):
                 #End laser function
 
 
-        except:
+        except Exception as e:
             #Draw the wall impact
-
+            print(e)
             super_board[x][y] = "laser_splash_%s.png" % cur_orientation
             hit_target = True
             return None, None
@@ -518,6 +521,8 @@ def main(WIN, WIDTH):
     hit_x = None
     hit_y = None
 
+    victor = False
+
     alternate_p = alternate_players()
     current_p = next(alternate_p)
     while True:
@@ -527,79 +532,93 @@ def main(WIN, WIDTH):
                 pyg.quit()
                 sys.exit()
             if event.type == pyg.MOUSEBUTTONDOWN:
-                if laser_fired:
-                    set_super_boards_zero()
-                    if hit_x is not None and hit_y is not None:
-                        if classic_board[hit_y][hit_x].type == 'pyr' or classic_board[hit_y][hit_x].type == 'ob':
-                            classic_board[hit_y][hit_x] = 0
-                            clear_node(hit_x,hit_y)
-                        elif classic_board[hit_y][hit_x].type == 'sob':
-                            simg = pyg.image.load('silver_obelisk_single.png')
-                            rimg = pyg.image.load('red_obelisk_single.png')
-                            simg = pyg.transform.smoothscale(simg,(piece_width,piece_height))
-                            rimg = pyg.transform.smoothscale(rimg,(piece_width,piece_height))
-                            if classic_board[hit_y][hit_x].team == 'r':
-                                classic_board[hit_y][hit_x] = rob
-                                set_board_image(hit_x,hit_y,rimg)
-                            elif classic_board[hit_y][hit_x].team == 's':
-                                classic_board[hit_y][hit_x] = sob
-                                set_board_image(hit_x,hit_y,simg)
-                        elif classic_board[hit_y][hit_x].type == 'pha':
-                            print(f"{classic_board[hit_y][hit_x].team} loses...")
-
-                    laser_fired = False
+                if victor:
+                    break
                 else:
-                    pos = pyg.mouse.get_pos()
-                    if move_made:
-                        if current_p == 's':
-                            if pos[0] > 880 and pos[1] > 765:
-                                if pos[0] < 900 and pos[1] < 785:
-                                    #print("silver lazer")
-                                    hit_x, hit_y = laser_shooter(1,classic_board)
+                    if laser_fired:
+                        set_super_boards_zero()
+                        if hit_x is not None and hit_y is not None:
+                            if classic_board[hit_y][hit_x].type == 'pyr' or classic_board[hit_y][hit_x].type == 'ob':
+                                classic_board[hit_y][hit_x] = 0
+                                clear_node(hit_x,hit_y)
+                            elif classic_board[hit_y][hit_x].type == 'sob':
+                                simg = pyg.image.load('silver_obelisk_single.png')
+                                rimg = pyg.image.load('red_obelisk_single.png')
+                                simg = pyg.transform.smoothscale(simg,(piece_width,piece_height))
+                                rimg = pyg.transform.smoothscale(rimg,(piece_width,piece_height))
+                                if classic_board[hit_y][hit_x].team == 'r':
+                                    classic_board[hit_y][hit_x] = rob
+                                    set_board_image(hit_x,hit_y,rimg)
+                                elif classic_board[hit_y][hit_x].team == 's':
+                                    classic_board[hit_y][hit_x] = sob
+                                    set_board_image(hit_x,hit_y,simg)
+                            elif classic_board[hit_y][hit_x].type == 'pha':
+                                if classic_board[hit_y][hit_x].team == 's':
+                                    vs = pyg.image.load("silver_victory.png")
+                                    vs = pyg.transform.smoothscale(vs, (WIDTH, HEIGHT))
+                                    WIN.blit(vs, (0, 0))
+                                    pyg.display.flip()
+                                    victor = True
+                                elif classic_board[hit_y][hit_x].team == 'r':
+                                    vs = pyg.image.load("red_victory.png")
+                                    vs = pyg.transform.smoothscale(vs, (WIDTH, HEIGHT))
+                                    WIN.blit(vs, (0, 0))
+                                    pyg.display.flip()
+                                    victor = True
 
-                                    laser_fired = True
-                                    current_p = next(alternate_p)
-                                    move_made = False
-
-                        elif current_p == 'r':
-                            if pos[0] > 100 and pos[1] > 20:
-                                if pos[0] < 120 and pos[1] < 40:
-                                    hit_x, hit_y = laser_shooter(0, classic_board)
-                                    laser_fired = True
-                                    current_p = next(alternate_p)
-                                    move_made = False
-
+                        laser_fired = False
                     else:
-                        try:
-                            x, y = find_node(pos, 10, 8)
-                            select_x = x
-                            select_y = y
-                            if clock.tick()<500:
-                                if event.button == 1:
-                                    if rotate_piece(x,y,1,current_p):
-                                        move_made = True
-                                        #current_p = next(alternate_p)
-                                    if classic_board[y][x] != 0 and classic_board[y][x].type == 'sob':
-                                        try:dragged_node,grid = sob_dragged_node(x,y,current_p)
-                                        except: pass
-                                        sob_special = True
-                                elif event.button == 3:
-                                    if rotate_piece(x, y, -1, current_p):
-                                        move_made = True
-                                        #current_p = next(alternate_p)
-                            else:
-                                pos = pyg.mouse.get_pos()
-                                drag_x,drag_y = pos
+                        pos = pyg.mouse.get_pos()
+                        if move_made:
+                            if current_p == 's':
+                                if pos[0] > 880 and pos[1] > 765:
+                                    if pos[0] < 900 and pos[1] < 785:
+                                        #print("silver lazer")
+                                        hit_x, hit_y = laser_shooter(1,classic_board)
 
-                                node = grid[y][x]
+                                        laser_fired = True
+                                        current_p = next(alternate_p)
+                                        move_made = False
 
-                                piece = classic_board[y][x]
-                                if piece != 0 and piece.team == current_p:
-                                    if dragged_node is None:
-                                        dragged_node = node
-                                        clear_node(x, y)
-                        except TypeError:
-                            pass
+                            elif current_p == 'r':
+                                if pos[0] > 100 and pos[1] > 20:
+                                    if pos[0] < 120 and pos[1] < 40:
+                                        hit_x, hit_y = laser_shooter(0, classic_board)
+                                        laser_fired = True
+                                        current_p = next(alternate_p)
+                                        move_made = False
+
+                        else:
+                            try:
+                                x, y = find_node(pos, 10, 8)
+                                select_x = x
+                                select_y = y
+                                if clock.tick()<500:
+                                    if event.button == 1:
+                                        if rotate_piece(x,y,1,current_p):
+                                            move_made = True
+                                            #current_p = next(alternate_p)
+                                        if classic_board[y][x] != 0 and classic_board[y][x].type == 'sob':
+                                            try:dragged_node,grid = sob_dragged_node(x,y,current_p)
+                                            except: pass
+                                            sob_special = True
+                                    elif event.button == 3:
+                                        if rotate_piece(x, y, -1, current_p):
+                                            move_made = True
+                                            #current_p = next(alternate_p)
+                                else:
+                                    pos = pyg.mouse.get_pos()
+                                    drag_x,drag_y = pos
+
+                                    node = grid[y][x]
+
+                                    piece = classic_board[y][x]
+                                    if piece != 0 and piece.team == current_p:
+                                        if dragged_node is None:
+                                            dragged_node = node
+                                            clear_node(x, y)
+                            except TypeError:
+                                pass
             if event.type == pyg.MOUSEMOTION:
                 if dragged_node is not None:
                     drag_x,drag_y = pyg.mouse.get_pos()
@@ -620,12 +639,13 @@ def main(WIN, WIDTH):
                     dragged_node = None
 
                     #print(convert_to_readable(classic_board))
-
-            refresh_display(WIN, grid)
-            if dragged_node is not None:
-                if dragged_node.image is not None:
-                    WIN.blit(dragged_node.image, (drag_x-piece_width/2, drag_y-piece_height/2))
-                    pyg.display.flip()
+            
+            if not victor:
+                refresh_display(WIN, grid)
+                if dragged_node is not None:
+                    if dragged_node.image is not None:
+                        WIN.blit(dragged_node.image, (drag_x-piece_width/2, drag_y-piece_height/2))
+                        pyg.display.flip()
 
 
 
