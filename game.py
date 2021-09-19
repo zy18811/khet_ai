@@ -133,9 +133,10 @@ def make_grid(rows,cols, width):
 def laser_shooter(player_colour, board):
     hit_target = False
     laser_start_tile = [(0,0), (7, 9)]
-    laser_start_orientation = ["S", "N"]
+    laser_start_orientation = ["N", "S"]
+
     orients = ["N", "E", "S", "W"]
-    orientation_val = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+    orientation_val = [(1, 0), (0, -1), (-1, 0), (0, 1)]
     pyramid_facings = ["NE", "SE", "SW", "NW"]
     pyramid_orientations = [("N", "E"), ("S", "E"), ("S", "W"), ("N", "W")]
 
@@ -144,10 +145,12 @@ def laser_shooter(player_colour, board):
     while not hit_target:
         try:
             next_tile = numpy.add(cur_tile, orientation_val[orients.index(cur_orientation)])
-            print(next_tile)
+
             x = next_tile[0]
             y = next_tile[1]
-            print(cur_orientation)
+            if x<0 or y<0 or x >9 or y >9:
+                hit_target = True
+            #print(cur_orientation)
             if board[x][y] == 0:
                 #Laser stuff for empty tile
 
@@ -158,12 +161,16 @@ def laser_shooter(player_colour, board):
             elif board[x][y].type == "pyr":
 
                 #Laser stuff for pyramids
-                if cur_orientation not in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
+                if cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
+                    ori_arr = [e for e in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]]
+                    ori_arr.remove(cur_orientation)
 
-                    del_orients = numpy.concatenate(([cur_orientation] ,pyramid_orientations[pyramid_facings.index(board[x][y].facing)]))
+                    cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
+                    cur_tile = next_tile
+                    #del_orients = numpy.concatenate(([cur_orientation] ,pyramid_orientations[pyramid_facings.index(board[x][y].facing)]))
 
                     #Change laser direction
-                    cur_orientation = [ori for ori in orients if ori not in del_orients][0]
+
                     #Draw laser bounce
                     print("bounce")
                     #Play sound
