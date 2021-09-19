@@ -169,8 +169,20 @@ def laser_shooter(player_colour, board):
             x = next_tile[0]
             y = next_tile[1]
 
-
             if x<0 or y<0 or x > 7 or y > 9:
+                if x == -1:
+                    x = 0
+                if y == -1:
+                    y = 0
+                if x == 8:
+                    x = 7
+                if y == 10:
+                    y = 9
+
+                if super_board[x][y] != 0:
+                    super_super_board[x][y] = "laser_splash_%s.png" % cur_orientation
+                else:
+                    super_board[x][y] = "laser_splash_%s.png" % cur_orientation
                 # other wall impact
 
                 hit_target = True
@@ -179,8 +191,6 @@ def laser_shooter(player_colour, board):
             if board[x][y] == 0:
 
                 #Laser stuff for empty tile
-
-
 
                 cur_tile = next_tile
                 #print("empty")
