@@ -166,16 +166,14 @@ def laser_shooter(player_colour, board):
             if board[x][y] == 0:
 
                 #Laser stuff for empty tile
-                print(x_pos,y_pos)
-                las_img = pyg.image.load('laser_NS.png')
-                WIN.blit(las_img, (x_pos,y_pos))
-                pyg.display.flip()
-                pyg.time.delay(5000)
 
                 cur_tile = next_tile
                 #print("empty")
                 #Draw laser with current orientation
-                super_board[x][y] = "laser_NS.png"
+                if cur_orientation == ("N" or "S"):
+                    super_board[x][y] = "laser_NS.png"
+                else:
+                    super_board[x][y] = "laser_EW.png"
                 #Play sound
             elif board[x][y].type == "pyr":
 
@@ -198,20 +196,31 @@ def laser_shooter(player_colour, board):
                     #End laser function
                     hit_target = True
             elif board[x][y].type == "dj":
-                pass
-                #Laser stuff for djeds
-                pass
+                #Laser stuff for Djeds
                 #Change laser direction
+                if cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
+                    ori_arr = [e for e in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]]
+                    ori_arr.remove(cur_orientation)
+                    cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
+                elif cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)+2]:
+                    ori_arr = [e for e in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]]
+                    ori_arr.remove(cur_orientation)
+                    cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
+
+                cur_tile = next_tile
                 #Draw bounce
+                super_board[x][y] = "laser_%s.png" % board[x][y].facing
                 #Play sound
             else:
                 #Laser stuff for Pharoahs and Obelisks
                 #Destroy piece
                 destroy_piece(next_tile, board)
+                super_board[x][y] = "laser_death_%s.png" % cur_orientation
                 #End laser function
                 hit_target = True
         except:
             #Draw the wall impact
+            super_board[x][y] = "laser_splash_%s.png" % cur_orientation
             hit_target = True
 
 def destroy_piece(x, y, board):
@@ -221,7 +230,6 @@ def destroy_piece(x, y, board):
         # Play victory sound
         pass
         # Set screen to victory screen with restart button
-    if
     #Draw board again
     #Play sound
     #Set other player's turn
