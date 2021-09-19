@@ -129,12 +129,11 @@ def make_grid(rows,cols, width):
             """
     return grid
 
-"""
+
 def laser_shooter(player_colour, board):
     hit_target = False
     laser_start_tile = [(0,0), (7, 9)]
     laser_start_orientation = ["S", "N"]
-
     orients = ["N", "E", "S", "W"]
     orientation_val = [(0, -1), (1, 0), (0, 1), (-1, 0)]
     pyramid_facings = ["NE", "SE", "SW", "NW"]
@@ -145,9 +144,11 @@ def laser_shooter(player_colour, board):
     while not hit_target:
         try:
             next_tile = numpy.add(cur_tile, orientation_val[orients.index(cur_orientation)])
-            if board[next_tile] == None:
+            print(next_tile)
+            if board[next_tile] == 0:
                 #Laser stuff for empty tile
                 cur_tile = next_tile
+                print("empty")
                 #Draw laser with current orientation
                 #Play sound
             elif board[next_tile].type == "pyr":
@@ -156,6 +157,7 @@ def laser_shooter(player_colour, board):
                     #Change laser direction
                     cur_orientation = pyramid_orientations[pyramid_facings.index(board[next_tile].facing)].remove(cur_orientation)
                     #Draw laser bounce
+                    print("bounce")
                     #Play sound
                 else:
                     #Destroy piece
@@ -163,6 +165,7 @@ def laser_shooter(player_colour, board):
                     hit_target = True
             elif board[next_tile].type == "dj":
                 #Laser stuff for djeds
+                pass
                 #Change laser direction
                 #Draw bounce
                 #Play sound
@@ -180,13 +183,11 @@ def destroy_piece(coordinates, board):
     #Remove piece from board
     if board[coordinates].type == "pha":
         # Play victory sound
+        pass
         # Set screen to victory screen with restart button
     #Draw board again
     #Play sound
     #Set other player's turn
-
-"""
-
 
 def update_display(win, grid):
     for row in grid:
@@ -405,14 +406,14 @@ def main(WIN, WIDTH):
                     if current_p == 's':
                         if pos[0] > 880 and pos[1] > 765:
                             if pos[0] < 900 and pos[1] < 785:
-                                print("silver lazorrrr")
+                                laser_shooter(1, classic_board)
                                 current_p = next(alternate_p)
                                 move_made = False
 
                     elif current_p == 'r':
                         if pos[0] > 100 and pos[1] > 20:
                             if pos[0] < 120 and pos[1] < 40:
-                                print("red lazorrrr")
+                                laser_shooter(0, classic_board)
                                 current_p = next(alternate_p)
                                 move_made = False
 
