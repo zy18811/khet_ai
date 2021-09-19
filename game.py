@@ -79,7 +79,7 @@ BLACK = (0, 0, 0)
 
 #Music
 pyg.mixer.music.load('music.wav')
-pyg.mixer.music.play(-1)
+#pyg.mixer.music.play(-1)
 
 class Node:
     def __init__(self, row, col,image =None):
@@ -248,9 +248,32 @@ def set_board_image(x,y,image):
 
 
 def set_board(node,x,y,sob_special):
+    if abs(node.row - y) >1  or abs(node.col - x) >1:
+        return False
+    if classic_board[y][x] != 0 and (classic_board[y][x].type == 'pyr' or
+        classic_board[y][x].type == 'sob' or
+        classic_board[y][x].type == 'ob') and classic_board[node.row][node.col].type == 'dj':
 
-    if classic_board[y][x] == classic_board[node.row][node.col] and classic_board[y][x].type == 'ob':
-        print("same_ob")
+        move_from = classic_board[node.row][node.col]
+        move_to = classic_board[y][x]
+        classic_board[node.row][node.col] = move_to
+        classic_board[y][x] = move_from
+        set_board_image(x,y,node.image)
+        set_board_image(node.col,node.row,pyg.transform.smoothscale(pyg.image.load(move_to.image),
+                                                            (node.piece_width, node.piece_height)))
+        return True
+    elif classic_board[y][x] == classic_board[node.row][node.col] and classic_board[y][x].type == 'ob':
+        if classic_board[node.row][node.col].team == 's':
+            classic_board[y][x] = ssob
+            set_board_image(x,y ,pyg.transform.smoothscale(pyg.image.load('silver_obelisk_double.png'),
+                                                           (node.piece_width, node.piece_height)))
+        elif classic_board[node.row][node.col].team == 'r':
+            classic_board[y][x] = rsob
+            set_board_image(x, y, pyg.transform.smoothscale(pyg.image.load('red_obelisk_double.png'),
+                                                            (node.piece_width, node.piece_height)))
+        if node.row != y or node.col != x:
+            classic_board[node.row][node.col] = 0
+        return True
     elif classic_board[y][x] != 0:
         return False
     else:
@@ -264,7 +287,6 @@ def set_board(node,x,y,sob_special):
 
         else:
             return False
-
 
 
 def rotate_piece(x,y,dir,current_p):
@@ -368,41 +390,58 @@ def main(WIN, WIDTH):
     alternate_p = alternate_players()
     current_p = next(alternate_p)
     while True:
+        current_loop_p = current_p
         pyg.time.delay(50)  ##stops cpu dying
         for event in pyg.event.get():
             if event.type == pyg.QUIT:
                 pyg.quit()
                 sys.exit()
             if event.type == pyg.MOUSEBUTTONDOWN:
-
                 pos = pyg.mouse.get_pos()
-                x, y = find_node(pos, 10, 8)
-                select_x = x
-                select_y = y
-                if clock.tick()<500:
-                    if event.button == 1:
-                        if rotate_piece(x,y,1,current_p):
-                            move_made = True
-                            current_p = next(alternate_p)
-                        if classic_board[y][x] != 0 and classic_board[y][x].type == 'sob':
-                            dragged_node,grid = sob_dragged_node(x,y,current_p)
-                            sob_special = True
-                    elif event.button == 3:
-                        if rotate_piece(x, y, -1, current_p):
-                            move_made = True
-                            current_p = next(alternate_p)
+                if move_made:
+                    if current_p == 's':
+                        if pos[0] > 880 and pos[1] > 765:
+                            if pos[0] < 900 and pos[1] < 785:
+                                print("silver lazorrrr")
+                                current_p = next(alternate_p)
+                                move_made = False
+                    elif current_p == 'r':
+                        if pos[0] > 100 and pos[1] > 20:
+                            if pos[0] < 120 and pos[1] < 40:
+                                print("red lazorrrr")
+                                current_p = next(alternate_p)
+                                move_made = False
                 else:
-                    pos = pyg.mouse.get_pos()
-                    drag_x,drag_y = pos
+                    try:
+                        x, y = find_node(pos, 10, 8)
+                        select_x = x
+                        select_y = y
+                        if clock.tick()<500:
+                            if event.button == 1:
+                                if rotate_piece(x,y,1,current_p):
+                                    move_made = True
+                                    #current_p = next(alternate_p)
+                                if classic_board[y][x] != 0 and classic_board[y][x].type == 'sob':
+                                    try:dragged_node,grid = sob_dragged_node(x,y,current_p)
+                                    except: pass
+                                    sob_special = True
+                            elif event.button == 3:
+                                if rotate_piece(x, y, -1, current_p):
+                                    move_made = True
+                                    #current_p = next(alternate_p)
+                        else:
+                            pos = pyg.mouse.get_pos()
+                            drag_x,drag_y = pos
 
-                    node = grid[y][x]
+                            node = grid[y][x]
 
-                    piece = classic_board[y][x]
-                    if piece != 0 and piece.team == current_p:
-                        if dragged_node is None:
-                            dragged_node = node
-                            clear_node(x, y)
-
+                            piece = classic_board[y][x]
+                            if piece != 0 and piece.team == current_p:
+                                if dragged_node is None:
+                                    dragged_node = node
+                                    clear_node(x, y)
+                    except TypeError:
+                        pass
             if event.type == pyg.MOUSEMOTION:
                 if dragged_node is not None:
                     drag_x,drag_y = pyg.mouse.get_pos()
@@ -413,25 +452,24 @@ def main(WIN, WIDTH):
                     x,y = find_node(pos,10,8)
                     if set_board(dragged_node,x,y,sob_special) and (select_x != x or select_y != y):
                         move_made = True
-                        current_p = next(alternate_p)
+                        #current_p = next(alternate_p)
                     else:
-                        set_board_image(select_x,select_y,dragged_node.image)
+                        if sob_special:
+                            pass
+                        else:
+                            set_board_image(select_x,select_y,dragged_node.image)
                     sob_special = False
-
-
-
-
                     dragged_node = None
 
-                    print(convert_to_readable(classic_board))
+                    #print(convert_to_readable(classic_board))
 
             refresh_display(WIN, grid)
             if dragged_node is not None:
                 if dragged_node.image is not None:
                     WIN.blit(dragged_node.image, (drag_x-piece_width/2, drag_y-piece_height/2))
                 pyg.display.flip()
-            else:
-                pass
+
+
 
 
 if __name__ == '__main__':
