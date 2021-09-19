@@ -63,6 +63,15 @@ classic_board = [[0,0,0,0,rsob,rpha,rsob,rpyr_SE,0,0],
                  [0,0,0,0,0,0,0,spyr_NE,0,0],
                  [0,0,spyr_NW,ssob,spha,ssob,0,0,0,0]]
 
+super_board = [[0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0]]
+
 WIDTH = 1000
 HEIGHT = int((WIDTH/10)*8)
 WIN = pyg.display.set_mode((WIDTH, HEIGHT))
@@ -155,8 +164,9 @@ def laser_shooter(player_colour, board):
                 #Laser stuff for empty tile
 
                 cur_tile = next_tile
-                print("empty")
                 #Draw laser with current orientation
+                super_board[x][y] = "laser_NS.png"
+                
                 #Play sound
             elif board[x][y].type == "pyr":
 
