@@ -76,7 +76,7 @@ BLACK = (0, 0, 0)
 
 
 class Node:
-    def __init__(self, row, col):
+    def __init__(self, row, col,image =None):
         scale = 1000/1600
         self.row = col
         self.col = row
@@ -89,7 +89,7 @@ class Node:
 
         self.piece_width = int(128*scale)-1
         self.piece_height = int(128*scale)-4
-        self.image = None
+        self.image = image
         self.occupied = 0
 
 
@@ -198,20 +198,131 @@ def refresh_display(win, grid):
     WIN.blit(bg, (0, 0))
     update_display(win,grid)
 
+
 def set_board_image(x,y,image):
     classic_starting[(y,x)] = image
 
+
+def set_board(node,x,y,sob_special):
+
+    if classic_board[y][x] == classic_board[node.row][node.col] and classic_board[y][x].type == 'ob':
+        print("same_ob")
+    elif classic_board[y][x] != 0:
+        return False
+    else:
+        classic_board[y][x] = classic_board[node.row][node.col]
+        set_board_image(x, y, node.image)
+        if sob_special:
+            return True
+        elif node.row != y or node.col != x:
+            classic_board[node.row][node.col] = 0
+            return True
+
+        else:
+            return False
+
+
+
+def rotate_piece(x,y,dir,current_p):
+    piece = classic_board[y][x]
+    if piece == 0:
+        return False
+    new_piece = None
+    facings = ['NE', 'SE', 'SW', 'NW']
+    if piece.type == 'ob' or piece.type == 'sob' or piece.type == 'pha':
+        return False
+    elif piece.type == 'pyr' or piece.type == 'dj':
+        new_facing = facings[(facings.index(piece.facing)-dir)%4]
+        if piece.team == 's':
+            if piece.team == current_p:
+                if piece.type == 'pyr':
+                    new_piece = globals()[f'spyr_{new_facing}']
+                if piece.type == 'dj':
+                    if new_facing == 'SW' or new_facing == 'NE':
+                        new_piece = globals()['sdj_NE_SW']
+                    elif new_facing == 'SE' or new_facing == 'NW':
+                        new_piece = globals()['sdj_NW_SE']
+                classic_board[y][x] = new_piece
+                classic_starting[(y, x)] = pyg.image.load(new_piece.image)
+                return True
+            else: return False
+
+        if piece.team == 'r':
+            if piece.team == current_p:
+                if piece.type == 'pyr':
+                    new_piece = globals()[f'rpyr_{new_facing}']
+                if piece.type == 'dj':
+                    if new_facing == 'SW' or new_facing == 'NE':
+                        new_piece = globals()['rdj_NE_SW']
+                    elif new_facing == 'SE' or new_facing == 'NW':
+                        new_piece = globals()['rdj_NW_SE']
+
+                classic_board[y][x] = new_piece
+                classic_starting[(y,x)] = pyg.image.load(new_piece.image)
+                return True
+            else: return False
+
+
+
+def sob_dragged_node(x,y,current_p):
+    dn = Node(x,y)
+
+    simg = pyg.image.load('silver_obelisk_single.png')
+    rimg = pyg.image.load('red_obelisk_single.png')
+    simg = pyg.transform.smoothscale(simg, (dn.piece_width, dn.piece_height))
+    rimg = pyg.transform.smoothscale(rimg, (dn.piece_width, dn.piece_height))
+
+    if current_p == 's' and classic_board[y][x].team == 's':
+        dn.image = simg
+        set_board_image(x,y,simg)
+        classic_board[y][x] = sob
+        return dn, make_grid(8,10,WIDTH)
+    elif current_p == 'r' and classic_board[y][x].team == 'r':
+        dn.image = rimg
+        set_board_image(x,y,rimg)
+        classic_board[y][x] = rob
+        return dn , make_grid(8,10,WIDTH)
+
+
+def convert_to_readable(board):
+    output = ''
+
+    for i in board:
+        for j in i:
+            try:
+                output += f"{j.team} {j.type} {j.facing}, "
+            except:
+                output += f"{j}, "
+        output += '\n'
+    return output
+
+
+def alternate_players():
+    while True:
+        yield 's'
+        yield 'r'
+
+
 def main(WIN, WIDTH):
+    clock = pyg.time.Clock()
     scale = 1000 / 1600
     piece_width = int(128 * scale) - 1
     piece_height = int(128 * scale) - 4
 
-    grid = make_grid(8,10, WIDTH)
+    grid = make_grid(8, 10, WIDTH)
 
-    dragged_piece = None
+    dragged_node = None
     drag_x = None
     drag_y = None
+    select_x = None
+    select_y = None
 
+    sob_special = False
+
+    move_made = False
+
+    alternate_p = alternate_players()
+    current_p = next(alternate_p)
     while True:
         pyg.time.delay(50)  ##stops cpu dying
         for event in pyg.event.get():
@@ -219,32 +330,64 @@ def main(WIN, WIDTH):
                 pyg.quit()
                 sys.exit()
             if event.type == pyg.MOUSEBUTTONDOWN:
+
                 pos = pyg.mouse.get_pos()
-                drag_x,drag_y = pos
-                x,y = find_node(pos,10,8)
-                piece = get_piece_from_coords(classic_board,x,y)
-                node = grid[y][x]
-                dragged_piece = node
-                clear_node(x, y)
+                x, y = find_node(pos, 10, 8)
+                select_x = x
+                select_y = y
+                if clock.tick()<500:
+                    if event.button == 1:
+                        if rotate_piece(x,y,1,current_p):
+                            move_made = True
+                            current_p = next(alternate_p)
+                        if classic_board[y][x] != 0 and classic_board[y][x].type == 'sob':
+                            dragged_node,grid = sob_dragged_node(x,y,current_p)
+                            sob_special = True
+                    elif event.button == 3:
+                        if rotate_piece(x, y, -1, current_p):
+                            move_made = True
+                            current_p = next(alternate_p)
+                else:
+                    pos = pyg.mouse.get_pos()
+                    drag_x,drag_y = pos
+
+                    node = grid[y][x]
+
+                    piece = classic_board[y][x]
+                    if piece != 0 and piece.team == current_p:
+                        if dragged_node is None:
+                            dragged_node = node
+                            clear_node(x, y)
+
             if event.type == pyg.MOUSEMOTION:
-                if dragged_piece is not None:
+                if dragged_node is not None:
                     drag_x,drag_y = pyg.mouse.get_pos()
             if event.type == pyg.MOUSEBUTTONUP:
-                if dragged_piece is not None:
+
+                if dragged_node is not None:
                     pos = pyg.mouse.get_pos()
                     x,y = find_node(pos,10,8)
-                    set_board_image(x,y,dragged_piece.image)
-                    dragged_piece = None
+                    if set_board(dragged_node,x,y,sob_special) and (select_x != x or select_y != y):
+                        move_made = True
+                        current_p = next(alternate_p)
+                    else:
+                        set_board_image(select_x,select_y,dragged_node.image)
+                    sob_special = False
 
+
+
+
+                    dragged_node = None
+
+                    print(convert_to_readable(classic_board))
 
             refresh_display(WIN, grid)
-            if dragged_piece is not None:
-                if dragged_piece.image is not None:
-                    WIN.blit(dragged_piece.image, (drag_x-piece_width/2, drag_y-piece_height/2))
+            if dragged_node is not None:
+                if dragged_node.image is not None:
+                    WIN.blit(dragged_node.image, (drag_x-piece_width/2, drag_y-piece_height/2))
                 pyg.display.flip()
             else:
                 pass
-
 
 
 if __name__ == '__main__':
