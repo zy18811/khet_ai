@@ -135,7 +135,7 @@ def laser_shooter(player_colour, board):
     laser_start_tile = [(0,0), (7, 9)]
     laser_start_orientation = ["S", "N"]
     orients = ["N", "E", "S", "W"]
-    orientation_val = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+    orientation_val = [(-1, 0), (0, 1), (1, 0), (0, -1)]
     pyramid_facings = ["NE", "SE", "SW", "NW"]
     pyramid_orientations = [("N", "E"), ("S", "E"), ("S", "W"), ("N", "W")]
 
@@ -145,17 +145,25 @@ def laser_shooter(player_colour, board):
         try:
             next_tile = numpy.add(cur_tile, orientation_val[orients.index(cur_orientation)])
             print(next_tile)
-            if board[next_tile] == 0:
+            x = next_tile[0]
+            y = next_tile[1]
+            print(cur_orientation)
+            if board[x][y] == 0:
                 #Laser stuff for empty tile
+
                 cur_tile = next_tile
                 print("empty")
                 #Draw laser with current orientation
                 #Play sound
-            elif board[next_tile].type == "pyr":
+            elif board[x][y].type == "pyr":
+
                 #Laser stuff for pyramids
-                if cur_orientation in pyramid_orientations[pyramid_facings.index(board[next_tile].facing)]:
+                if cur_orientation not in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
+
+                    del_orients = numpy.concatenate(([cur_orientation] ,pyramid_orientations[pyramid_facings.index(board[x][y].facing)]))
+
                     #Change laser direction
-                    cur_orientation = pyramid_orientations[pyramid_facings.index(board[next_tile].facing)].remove(cur_orientation)
+                    cur_orientation = [ori for ori in orients if ori not in del_orients][0]
                     #Draw laser bounce
                     print("bounce")
                     #Play sound
@@ -163,7 +171,8 @@ def laser_shooter(player_colour, board):
                     #Destroy piece
                     #End laser function
                     hit_target = True
-            elif board[next_tile].type == "dj":
+            elif board[x][y].type == "dj":
+                pass
                 #Laser stuff for djeds
                 pass
                 #Change laser direction
@@ -182,12 +191,16 @@ def laser_shooter(player_colour, board):
 def destroy_piece(coordinates, board):
     #Remove piece from board
     if board[coordinates].type == "pha":
+        pass
         # Play victory sound
         pass
         # Set screen to victory screen with restart button
     #Draw board again
     #Play sound
     #Set other player's turn
+
+
+
 
 def update_display(win, grid):
     for row in grid:
@@ -406,7 +419,8 @@ def main(WIN, WIDTH):
                     if current_p == 's':
                         if pos[0] > 880 and pos[1] > 765:
                             if pos[0] < 900 and pos[1] < 785:
-                                laser_shooter(1, classic_board)
+                                print("silver lazer")
+                                laser_shooter(1,classic_board)
                                 current_p = next(alternate_p)
                                 move_made = False
 
