@@ -264,10 +264,7 @@ def laser_shooter(player_colour, board):
         except:
             #Draw the wall impact
 
-            if super_board[x][y] != 0:
-                super_super_board[x][y] = "laser_splash_%s.png" % cur_orientation
-            else:
-                super_board[x][y] = "laser_splash_%s.png" % cur_orientation
+            super_board[x][y] = "laser_splash_%s.png" % cur_orientation
             hit_target = True
             return None, None
 
