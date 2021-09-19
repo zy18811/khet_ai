@@ -553,13 +553,13 @@ def main(WIN, WIDTH):
                                     classic_board[hit_y][hit_x] = sob
                                     set_board_image(hit_x,hit_y,simg)
                             elif classic_board[hit_y][hit_x].type == 'pha':
-                                if classic_board[hit_y][hit_x].team == 's':
+                                if classic_board[hit_y][hit_x].team == 'r':
                                     vs = pyg.image.load("silver_victory.png")
                                     vs = pyg.transform.smoothscale(vs, (WIDTH, HEIGHT))
                                     WIN.blit(vs, (0, 0))
                                     pyg.display.flip()
                                     victor = True
-                                elif classic_board[hit_y][hit_x].team == 'r':
+                                elif classic_board[hit_y][hit_x].team == 's':
                                     vs = pyg.image.load("red_victory.png")
                                     vs = pyg.transform.smoothscale(vs, (WIDTH, HEIGHT))
                                     WIN.blit(vs, (0, 0))
