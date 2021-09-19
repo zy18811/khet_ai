@@ -151,14 +151,8 @@ def make_grid(rows,cols, width):
 
 def laser_shooter(player_colour, board):
     hit_target = False
-    laser_start_tile = [(0,0), (7, 9)]
+    laser_start_tile = [(-1,0), (8, 9)]
     laser_start_orientation = ["N", "S"]
-
-    x_s = laser_start_tile[player_colour][0]
-    y_s = laser_start_tile[player_colour][1]
-
-    super_board[x_s][y_s] = 'laser_NS.png'
-
 
     orients = ["N", "E", "S", "W"]
     orientation_val = [(1, 0), (0, -1), (-1, 0), (0, 1)]
