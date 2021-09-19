@@ -256,7 +256,7 @@ def laser_shooter(player_colour, board):
             else:
                 #Laser stuff for Pharoahs and Obelisks
                 #Destroy piece
-                #board[x][y] = 0
+                super_board[x][y] = "laser_death_%s.png" % cur_orientation
                 return y,x
                 #End laser function
 
