@@ -2,6 +2,7 @@ import pygame as pyg
 pyg.init()
 import numpy
 import sys
+import time
 
 
 class Piece:
@@ -157,13 +158,22 @@ def laser_shooter(player_colour, board):
 
             x = next_tile[0]
             y = next_tile[1]
+            x_pos, y_pos = get_pos_4_coords(x,y)
+
             if x<0 or y<0 or x >9 or y >9:
                 hit_target = True
             #print(cur_orientation)
             if board[x][y] == 0:
+
                 #Laser stuff for empty tile
+                print(x_pos,y_pos)
+                las_img = pyg.image.load('laser_NS.png')
+                WIN.blit(las_img, (x_pos,y_pos))
+                pyg.display.flip()
+                pyg.time.delay(5000)
 
                 cur_tile = next_tile
+                #print("empty")
                 #Draw laser with current orientation
                 super_board[x][y] = "laser_NS.png"
                 #Play sound
@@ -223,6 +233,7 @@ def update_display(win, grid):
     for row in grid:
         for spot in row:
             spot.setup(win)
+    
     pyg.display.update()
 
 
@@ -364,7 +375,6 @@ def rotate_piece(x,y,dir,current_p):
             else: return False
 
 
-
 def sob_dragged_node(x,y,current_p):
     dn = Node(x,y)
 
@@ -405,12 +415,14 @@ def alternate_players():
 
 
 def main(WIN, WIDTH):
+
     clock = pyg.time.Clock()
     scale = 1000 / 1600
     piece_width = int(128 * scale) - 1
     piece_height = int(128 * scale) - 4
 
     grid = make_grid(8, 10, WIDTH)
+
 
     dragged_node = None
     drag_x = None
@@ -504,7 +516,8 @@ def main(WIN, WIDTH):
             if dragged_node is not None:
                 if dragged_node.image is not None:
                     WIN.blit(dragged_node.image, (drag_x-piece_width/2, drag_y-piece_height/2))
-                pyg.display.flip()
+                    pyg.display.flip()
+
 
 
 if __name__ == '__main__':
