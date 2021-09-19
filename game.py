@@ -153,10 +153,13 @@ def laser_shooter(player_colour, board):
     hit_target = False
     laser_start_tile = [(0,0), (7, 9)]
     laser_start_orientation = ["N", "S"]
+
     x_s = laser_start_tile[player_colour][0]
     y_s = laser_start_tile[player_colour][1]
 
     super_board[x_s][y_s] = 'laser_NS.png'
+
+
     orients = ["N", "E", "S", "W"]
     orientation_val = [(1, 0), (0, -1), (-1, 0), (0, 1)]
     pyramid_facings = ["NE", "SE", "SW", "NW"]
@@ -173,8 +176,9 @@ def laser_shooter(player_colour, board):
             y = next_tile[1]
 
 
-            if x<0 or y<0 or x >9 or y >9:
+            if x<0 or y<0 or x > 7 or y > 9:
                 # other wall impact
+
                 hit_target = True
                 return None, None
             #print(cur_orientation)
@@ -187,7 +191,7 @@ def laser_shooter(player_colour, board):
                 cur_tile = next_tile
                 #print("empty")
                 #Draw laser with current orientation
-                if cur_orientation == ("N" or "S"):
+                if cur_orientation == 'N' or cur_orientation == "S":
                     if super_board[x][y] != 0:
                         super_super_board[x][y] = "laser_NS.png"
                     else:
@@ -255,6 +259,7 @@ def laser_shooter(player_colour, board):
 
         except:
             #Draw the wall impact
+
             if super_board[x][y] != 0:
                 super_super_board[x][y] = "laser_splash_%s.png" % cur_orientation
             else:
@@ -287,12 +292,20 @@ def update_display(win, grid):
     for i in range(10):
         for j in range(8):
             try:
-                img = pyg.image.load(super_board[j][i])
-                img = pyg.transform.smoothscale(img, (piece_width, piece_height))
+                img1 = pyg.image.load(super_board[j][i])
+                img1 = pyg.transform.smoothscale(img1, (piece_width, piece_height))
                 x,y = get_pos_4_coords(i,j)
-                WIN.blit(img,(x,y))
+                WIN.blit(img1,(x,y))
             except:
                 pass
+            try:
+                img2 = pyg.image.load(super_super_board[j][i])
+                img2 = pyg.transform.smoothscale(img2, (piece_width, piece_height))
+                x, y = get_pos_4_coords(i, j)
+                WIN.blit(img2, (x, y))
+            except:
+                pass
+
     pyg.display.update()
 
 
@@ -472,11 +485,12 @@ def alternate_players():
         yield 's'
         yield 'r'
 
-def set_super_board_zero():
+def set_super_boards_zero():
     global super_board
     for j in range(8):
         for i in range(10):
             super_board[j][i] = 0
+            super_super_board[j][i] = 0
 
 
 def main(WIN, WIDTH):
@@ -513,23 +527,25 @@ def main(WIN, WIDTH):
                 sys.exit()
             if event.type == pyg.MOUSEBUTTONDOWN:
                 if laser_fired:
-                    set_super_board_zero()
+                    set_super_boards_zero()
                     if hit_x is not None and hit_y is not None:
                         if classic_board[hit_y][hit_x].type == 'pyr' or classic_board[hit_y][hit_x].type == 'ob':
                             classic_board[hit_y][hit_x] = 0
                             clear_node(hit_x,hit_y)
                         elif classic_board[hit_y][hit_x].type == 'sob':
-
                             simg = pyg.image.load('silver_obelisk_single.png')
                             rimg = pyg.image.load('red_obelisk_single.png')
                             simg = pyg.transform.smoothscale(simg,(piece_width,piece_height))
                             rimg = pyg.transform.smoothscale(rimg,(piece_width,piece_height))
-                            if current_p == 's':
-                                classic_board[hit_y][hit_x] = sob
-                                set_board_image(hit_x,hit_y,simg)
-                            elif current_p == 'r':
+                            if classic_board[hit_y][hit_x].team == 'r':
                                 classic_board[hit_y][hit_x] = rob
                                 set_board_image(hit_x,hit_y,rimg)
+                            elif classic_board[hit_y][hit_x].team == 's':
+                                classic_board[hit_y][hit_x] = sob
+                                set_board_image(hit_x,hit_y,simg)
+                        elif classic_board[hit_y][hit_x].type == 'pha':
+                            print(f"{classic_board[hit_y][hit_x].team} loses...")
+
                     laser_fired = False
                 else:
                     pos = pyg.mouse.get_pos()
