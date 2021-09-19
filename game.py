@@ -32,8 +32,8 @@ sob = Piece('s','ob','','silver_obelisk_single.png')
 rob = Piece('r','ob','','red_obelisk_single.png')
 ssob = Piece('s','sob','','silver_obelisk_double.png')
 rsob = Piece('r','sob','','red_obelisk_double.png')
-spha = Piece('s','pha','','silver_pharoah.png')
-rpha = Piece('r','pha','','red_pharoah.png')
+spha = Piece('s','pha','','silver_pharoah_new.png')
+rpha = Piece('r','pha','','red_pharoah_new.png')
 
 
 classic_starting = {(0,0):None, (0,1):None, (0,2):None, (0,3):None, (0,4):pyg.image.load(rsob.image), (0,5):pyg.image.load(rpha.image),
@@ -110,7 +110,7 @@ class Node:
 
 
 
-                piece_img = pyg.transform.smoothscale(piece_img, (self.piece_width,self.piece_height))
+                piece_img = pyg.transform.smoothscale(piece_img.convert(), (self.piece_width,self.piece_height))
                 self.image = piece_img
 
                 WIN.blit(piece_img, (self.x, self.y))
@@ -247,8 +247,12 @@ def set_board_image(x,y,image):
     classic_starting[(y,x)] = image
 
 
-def set_board(node,x,y,sob_special):
+def set_board(node,x,y,sob_special,p):
     if abs(node.row - y) >1  or abs(node.col - x) >1:
+        return False
+    if p == 's' and (x == 0 or (x == 8 and y == 0) or (x == 8 and y == 7)):
+        return False
+    if p == 'r' and (x == 9 or (x == 1 and y == 0) or (x == 1 and y == 7)):
         return False
     if classic_board[y][x] != 0 and (classic_board[y][x].type == 'pyr' or
         classic_board[y][x].type == 'sob' or
@@ -390,7 +394,6 @@ def main(WIN, WIDTH):
     alternate_p = alternate_players()
     current_p = next(alternate_p)
     while True:
-        current_loop_p = current_p
         pyg.time.delay(50)  ##stops cpu dying
         for event in pyg.event.get():
             if event.type == pyg.QUIT:
@@ -405,12 +408,14 @@ def main(WIN, WIDTH):
                                 print("silver lazorrrr")
                                 current_p = next(alternate_p)
                                 move_made = False
+
                     elif current_p == 'r':
                         if pos[0] > 100 and pos[1] > 20:
                             if pos[0] < 120 and pos[1] < 40:
                                 print("red lazorrrr")
                                 current_p = next(alternate_p)
                                 move_made = False
+
                 else:
                     try:
                         x, y = find_node(pos, 10, 8)
@@ -450,7 +455,7 @@ def main(WIN, WIDTH):
                 if dragged_node is not None:
                     pos = pyg.mouse.get_pos()
                     x,y = find_node(pos,10,8)
-                    if set_board(dragged_node,x,y,sob_special) and (select_x != x or select_y != y):
+                    if set_board(dragged_node,x,y,sob_special,current_p) and (select_x != x or select_y != y):
                         move_made = True
                         #current_p = next(alternate_p)
                     else:
@@ -468,8 +473,6 @@ def main(WIN, WIDTH):
                 if dragged_node.image is not None:
                     WIN.blit(dragged_node.image, (drag_x-piece_width/2, drag_y-piece_height/2))
                 pyg.display.flip()
-
-
 
 
 if __name__ == '__main__':
