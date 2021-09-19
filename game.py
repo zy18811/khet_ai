@@ -73,6 +73,15 @@ super_board = [[0,0,0,0,0,0,0,0,0,0],
                  [0,0,0,0,0,0,0,0,0,0],
                  [0,0,0,0,0,0,0,0,0,0]]
 
+super_super_board = [[0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0],
+                 [0,0,0,0,0,0,0,0,0,0]]
+
 WIDTH = 1000
 HEIGHT = int((WIDTH/10)*8)
 WIN = pyg.display.set_mode((WIDTH, HEIGHT))
@@ -171,9 +180,15 @@ def laser_shooter(player_colour, board):
                 #print("empty")
                 #Draw laser with current orientation
                 if cur_orientation == ("N" or "S"):
-                    super_board[x][y] = "laser_NS.png"
+                    if super_board[x][y] != 0:
+                        super_super_board[x][y] = "laser_NS.png"
+                    else:
+                        super_board[x][y] = "laser_NS.png"
                 else:
-                    super_board[x][y] = "laser_EW.png"
+                    if super_board[x][y] != 0:
+                        super_super_board[x][y] = "laser_EW.png"
+                    else:
+                        super_board[x][y] = "laser_EW.png"
                 #Play sound
             elif board[x][y].type == "pyr":
 
@@ -188,11 +203,17 @@ def laser_shooter(player_colour, board):
                     #del_orients = numpy.concatenate(([cur_orientation] ,pyramid_orientations[pyramid_facings.index(board[x][y].facing)]))
 
                     #Draw laser bounce
-                    super_board[x][y] = "laser_%s.png" % board[x][y].facing
+                    if super_board[x][y] != 0:
+                        super_super_board[x][y] = "laser_%s.png" % board[x][y].facing
+                    else:
+                        super_board[x][y] = "laser_%s.png" % board[x][y].facing
                     #Play sound
                 else:
                     #Destroy piece
-                    super_board[x][y] = "laser_death_%s.png" % cur_orientation
+                    if super_board[x][y] != 0:
+                        super_super_board[x][y] = "laser_death_%s.png" % cur_orientation
+                    else:
+                        super_board[x][y] = "laser_death_%s.png" % cur_orientation
                     #End laser function
                     hit_target = True
             elif board[x][y].type == "dj":
@@ -209,18 +230,27 @@ def laser_shooter(player_colour, board):
 
                 cur_tile = next_tile
                 #Draw bounce
-                super_board[x][y] = "laser_%s.png" % board[x][y].facing
+                if super_board[x][y] != 0:
+                    super_super_board[x][y] = "laser_%s.png" % board[x][y].facing
+                else:
+                    super_board[x][y] = "laser_%s.png" % board[x][y].facing
                 #Play sound
             else:
                 #Laser stuff for Pharoahs and Obelisks
                 #Destroy piece
                 destroy_piece(next_tile, board)
-                super_board[x][y] = "laser_death_%s.png" % cur_orientation
+                if super_board[x][y] != 0:
+                    super_super_board[x][y] = "laser_death_%s.png" % cur_orientation
+                else:
+                    super_board[x][y] = "laser_death_%s.png" % cur_orientation
                 #End laser function
                 hit_target = True
         except:
             #Draw the wall impact
-            super_board[x][y] = "laser_splash_%s.png" % cur_orientation
+            if super_board[x][y] != 0:
+                super_super_board[x][y] = "laser_splash_%s.png" % cur_orientation
+            else:
+                super_board[x][y] = "laser_splash_%s.png" % cur_orientation
             hit_target = True
 
 def destroy_piece(x, y, board):
