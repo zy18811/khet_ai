@@ -1,9 +1,10 @@
 from sklearn import preprocessing
 #from game import convert_to_readable
 from sklearn.preprocessing import OneHotEncoder
-from piece_init import *
+from ai.piece_init import *
 from copy import deepcopy
 import numpy as np
+
 
 
 def convert_to_readable(board):
@@ -73,15 +74,20 @@ def mirror_state(state):
     return state
 
 
-def possible_actions_4_state(board):
+def s_2_r_coords(x,y):
+    return 9-x, 7-y
 
+def possible_actions_4_state(state,player):
     #r*x,y*L
     #r*x,y*R
     #m*x,y*x1,y1
     #split_sob*x,y*x1,y1
     #dj_swap*x,y*x1,y1
     #stack_ob*x,y*x1,y1
+    board = deepcopy(state)
     player_colour = 's'
+    if player == 'r':
+        board = mirror_state(board)
     actions = []
     for j in range(8):
         for i in range(10):
@@ -99,10 +105,34 @@ def possible_actions_4_state(board):
                             elif piece.type == 'ob' and board[m][n].type == 'ob' and board[m][n].team == player_colour:
                                 actions.append(f'stack_ob*{i},{j}*{n},{m}')
                             elif piece.type == 'dj' and (board[m][n].type =='pyr' or board[m][n].type == 'ob' or board[m][n].type == 'sob'):
-                                actions.append(f'dj_swap*{i},{j}*{n},{m}')
+                                if board[m][n].team == 'r':
+                                    if not (i == 9 or (i == 1 and j == 0) or (i == 1 and j == 7)):
+                                        actions.append(f'dj_swap*{i},{j}*{n},{m}')
+                                else:
+                                    actions.append(f'dj_swap*{i},{j}*{n},{m}')
                 if piece.type == 'pyr' or piece.type == 'dj':
                     actions.append(f'r*{i},{j}*L')
                     actions.append(f'r*{i},{j}*R')
+
+    if player == 'r':
+        i = 0
+        for action in actions:
+            a_coords = [int(e) for e in list(filter(str.isdigit, action))]
+            action = action.split('*')
+            x0 = a_coords[0]
+            y0 = a_coords[1]
+            x01, y01 = s_2_r_coords(x0,y0)
+            flipped_action = action[0] + f'*{x01},{y01}'
+            if len(action) == 3:
+                if (action[2] != 'L' and action[2] != 'R'):
+                    x1 = a_coords[2]
+                    y1 = a_coords[3]
+                    x11, y11 = s_2_r_coords(x1,y1)
+                    flipped_action += f'*{x11},{y11}'
+                else:
+                    flipped_action += f'*{action[2]}'
+            actions[i] = flipped_action
+            i+=1
     return actions
 
 
@@ -123,7 +153,12 @@ def all_actions():
     return all_acts
 
 
-def laser_shoot(board):
+def laser_shoot(board,player):
+    if player == 's':
+        ix = 0
+    else:
+        ix = 1
+
     hit_target = False
     laser_start_tile = [(-1, 0), (8, 9)]
     laser_start_orientation = ["N", "S"]
@@ -133,8 +168,8 @@ def laser_shoot(board):
     pyramid_facings = ["NE", "SE", "SW", "NW"]
     pyramid_orientations = [("N", "E"), ("S", "E"), ("S", "W"), ("N", "W")]
 
-    cur_tile = laser_start_tile[0]
-    cur_orientation = laser_start_orientation[0]
+    cur_tile = laser_start_tile[ix]
+    cur_orientation = laser_start_orientation[ix]
 
     while not hit_target:
         try:
@@ -213,8 +248,9 @@ def laser_shoot(board):
             return None, None
 
 
-def laser_eval(state):
-    hit_x, hit_y = laser_shoot(state)
+def laser_eval(state,player):
+    copy = deepcopy(state)
+    hit_x, hit_y = laser_shoot(copy,player)
     if hit_x is not None and hit_y is not None:
         hit_piece = state[hit_y][hit_x]
         state[hit_y][hit_x] = 0
@@ -223,15 +259,18 @@ def laser_eval(state):
     return state, hit_piece
 
 
-def is_terminal(state):
-    state, hit_piece = laser_eval(state)
+def is_terminal(state,player):
+    copy = deepcopy(state)
+    _, hit_piece = laser_eval(copy,player)
     if hit_piece is not None and hit_piece.type == 'pha':
         return True
     else: return False
 
 
-def apply_move(move, state):
+def apply_move(move, state,player):
+
     n_state = deepcopy(state)
+
     facings = ['NE','SE','SW','NW']
     move_locs = [int(e) for e in list(filter(str.isdigit,move))]
     x0 = move_locs[0]
@@ -247,12 +286,12 @@ def apply_move(move, state):
         elif move[-1] == 'R':
             new_facing = facings[(facings.index(piece.facing) + 1) % 4]
         if piece.type == 'pyr':
-            n_state[y0][x0] = globals()[f's{piece.type}_{new_facing}']
+            n_state[y0][x0] = globals()[f'{piece.team}{piece.type}_{new_facing}']
         elif piece.type == 'dj':
             if new_facing == 'NW' or new_facing == 'SE':
-                n_state[y0][x0] = sdj_NW_SE
+                n_state[y0][x0] = globals()[f'{piece.team}dj_NW_SE']
             elif new_facing == 'NE' or new_facing == 'SW':
-                n_state[y0][x0] = sdj_NE_SW
+                n_state[y0][x0] = globals()[f'{piece.team}dj_NE_SW']
     if move[0] == 'm':
         x1= move_locs[2]
         y1 = move_locs[3]
@@ -267,23 +306,24 @@ def apply_move(move, state):
     elif move[:2] == 'sp':
         x1 = move_locs[2]
         y1 = move_locs[3]
-        n_state[y0][x0] = sob
-        n_state[y1][x1] = sob
+        n_state[y0][x0] = globals()[f'{piece.team}ob']
+        n_state[y1][x1] = globals()[f'{piece.team}ob']
 
     elif move[:2] == 'st':
         x1 = move_locs[2]
         y1 = move_locs[2]
         n_state[y0][x0] = 0
-        n_state[y1][x1] = ssob
+        n_state[y1][x1] = globals()[f'{piece.team}sob']
 
-    n_state,_ = laser_eval(n_state)
+    n_state,_ = laser_eval(n_state,player)
     return n_state
 
 
 
 
 if __name__ == '__main__':
-    print(len(all_actions()))
+    print(s_2_r_coords(2,3))
+
 
 
 
