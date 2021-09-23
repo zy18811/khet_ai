@@ -434,14 +434,28 @@ def set_board(node,x,y,sob_special,p):
         classic_board[y][x].type == 'sob' or
         classic_board[y][x].type == 'ob') and classic_board[node.row][node.col].type == 'dj':
 
-        move_from = classic_board[node.row][node.col]
-        move_to = classic_board[y][x]
-        classic_board[node.row][node.col] = move_to
-        classic_board[y][x] = move_from
-        set_board_image(x,y,node.image)
-        set_board_image(node.col,node.row,pyg.transform.smoothscale(pyg.image.load(move_to.image),
-                                                            (node.piece_width, node.piece_height)))
-        return True
+
+        if (classic_board[y][x].team == 's' and classic_board[node.row][node.col].team == 'r' and (node.col == 0 or
+                                                                                                  (node.col == 8 and
+                                                                                                   node.row == 0) or
+                                                                                                  (node.col == 8 and
+                                                                                                   node.row == 7))) or\
+                (classic_board[y][x].team == 'r' and classic_board[node.row][node.col].team == 's' and (node.col == 9 or
+                                                                                                    (node.col == 1 and
+                                                                                                     node.row == 0) or
+                                                                                                    (node.col == 1 and
+                                                                                                     node.row == 7))):
+            return False
+        else:
+
+            move_from = classic_board[node.row][node.col]
+            move_to = classic_board[y][x]
+            classic_board[node.row][node.col] = move_to
+            classic_board[y][x] = move_from
+            set_board_image(x,y,node.image)
+            set_board_image(node.col,node.row,pyg.transform.smoothscale(pyg.image.load(move_to.image),
+                                                                (node.piece_width, node.piece_height)))
+            return True
     elif classic_board[y][x] == classic_board[node.row][node.col] and classic_board[y][x].type == 'ob':
 
         if classic_board[node.row][node.col].team == 's':
