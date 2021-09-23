@@ -443,18 +443,43 @@ def set_board(node,x,y,sob_special,p):
                                                             (node.piece_width, node.piece_height)))
         return True
     elif classic_board[y][x] == classic_board[node.row][node.col] and classic_board[y][x].type == 'ob':
+
         if classic_board[node.row][node.col].team == 's':
-            classic_board[y][x] = ssob
-            set_board_image(x,y ,pyg.transform.smoothscale(pyg.image.load('silver_obelisk_double.png'),
-                                                           (node.piece_width, node.piece_height)))
+            if (node.row!=y or node.col != x) or sob_special:
+                classic_board[y][x] = ssob
+                set_board_image(x,y ,pyg.transform.smoothscale(pyg.image.load('silver_obelisk_double.png'),
+                                                       (node.piece_width, node.piece_height)))
+            else:
+                classic_board[y][x] = sob
+                set_board_image(x, y, pyg.transform.smoothscale(pyg.image.load('silver_obelisk_single.png'),
+                                                                (node.piece_width, node.piece_height)))
+
+
         elif classic_board[node.row][node.col].team == 'r':
-            classic_board[y][x] = rsob
-            set_board_image(x, y, pyg.transform.smoothscale(pyg.image.load('red_obelisk_double.png'),
-                                                            (node.piece_width, node.piece_height)))
-        if node.row != y or node.col != x:
+            if (node.row!=y or node.col != x) or sob_special:
+                classic_board[y][x] = rsob
+                set_board_image(x,y ,pyg.transform.smoothscale(pyg.image.load('red_obelisk_double.png'),
+                                                       (node.piece_width, node.piece_height)))
+            else:
+                classic_board[y][x] = rob
+                set_board_image(x, y, pyg.transform.smoothscale(pyg.image.load('red_obelisk_single.png'),
+                                                                (node.piece_width, node.piece_height)))
+
+        if (node.row != y or node.col != x) and not sob_special:
             classic_board[node.row][node.col] = 0
         return True
     elif classic_board[y][x] != 0:
+        if sob_special:
+            if classic_board[node.row][node.col].team == 's':
+
+                classic_board[node.row][node.col] = ssob
+                set_board_image(node.col, node.row, pyg.transform.smoothscale(pyg.image.load('silver_obelisk_double.png'),
+                                                                (node.piece_width, node.piece_height)))
+
+            elif classic_board[node.row][node.col].team == 'r':
+                classic_board[node.row][node.col] = rsob
+                set_board_image(node.col, node.row, pyg.transform.smoothscale(pyg.image.load('red_obelisk_double.png'),
+                                                                    (node.piece_width, node.piece_height)))
         return False
     else:
         classic_board[y][x] = classic_board[node.row][node.col]
@@ -656,10 +681,12 @@ def main(WIN, WIDTH):
                                 select_y = y
                                 if clock.tick()<500:
                                     if event.button == 1:
+
                                         if rotate_piece(x,y,1,current_p):
                                             move_made = True
                                             #current_p = next(alternate_p)
                                         if classic_board[y][x] != 0 and classic_board[y][x].type == 'sob':
+
                                             try:dragged_node,grid = sob_dragged_node(x,y,current_p)
                                             except: pass
                                             sob_special = True
@@ -674,6 +701,7 @@ def main(WIN, WIDTH):
                                     node = grid[y][x]
 
                                     piece = classic_board[y][x]
+
                                     if piece != 0 and piece.team == current_p:
                                         if dragged_node is None:
                                             dragged_node = node
@@ -692,12 +720,15 @@ def main(WIN, WIDTH):
                         move_made = True
                         #current_p = next(alternate_p)
                     else:
+
                         if sob_special:
                             pass
                         else:
                             set_board_image(select_x,select_y,dragged_node.image)
+
                     sob_special = False
                     dragged_node = None
+
 
                     #print(convert_to_readable(classic_board))
             
