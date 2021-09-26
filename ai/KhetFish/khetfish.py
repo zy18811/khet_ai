@@ -16,14 +16,42 @@ class Game:
     # TODO: better evaluation
     def evaluate_position(self,board,player):
         pos_score = 0
+        # Positional evaluation
         for i in range(8):
             for j in range(10):
                 piece = board[i][j]
-                if piece != 0 and piece.type != 'dj':
+                # Calculates value for each pyramid existing and its position
+                if piece == 'pyr':
                     if piece.team == player:
                         pos_score -= piece.value
                     elif piece.team != player:
                         pos_score += piece.value
+                    elif piece.team != player:
+                        pos_score -= piece.value
+                # Calculates value for Obelisk's existing
+                elif piece == 'ob':
+                    if piece.team == player:
+                        pos_score += piece.value
+                    elif piece.team != player:
+                        pos_score -= piece.value
+                # Calculates value for Djed's positions
+                elif piece == 'dj':
+                    pass
+                # Stores the location of the Pharoahs
+                elif piece.type == 'pha':
+                    pha_i = i
+                    pha_j = j
+                    if piece.team == player:
+                        pos_score += piece.value
+                    elif piece.team != player:
+                        pos_score -= piece.value
+                else:
+                    pass
+
+        # Laser Evaluation
+        laser_shoot = actions.lasershoot(board, player)
+        # King Safety Evaluation
+
         return pos_score
 
     # TODO: make faster
