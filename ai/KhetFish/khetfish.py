@@ -1,12 +1,11 @@
 import numpy as np
-import pygame.event
+import pygame
 from tqdm import tqdm
 from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, apply_move_visuals
 from ai.globals import *
-#from game import make_grid, refresh_display, sys
 import uuid
 from multiprocessing import Pool, cpu_count
-
+import sys
 
 class Game:
     def __init__(self,evalulate_position = None):
@@ -21,9 +20,9 @@ class Game:
                 piece = board[i][j]
                 if piece != 0 and piece.type != 'dj':
                     if piece.team == player:
-                        pos_score += piece.value
-                    elif piece.team != player:
                         pos_score -= piece.value
+                    elif piece.team != player:
+                        pos_score += piece.value
         return pos_score
 
     # TODO: make faster
@@ -71,20 +70,7 @@ class Game:
         with Pool(threads) as p:
             bestMoveList = np.array(list(tqdm(p.imap(self.mmWrapper, args), total=len(args))))
         return bestMoveList[:,1][np.argmax(bestMoveList[:,0])]
-        """
-        for x in tqdm(possibleMoves):
-            move = x
-            old_board = deepcopy(board)
-            board = self.get_next_board(board, move, player)
-            value = np.maximum(bestMove, self.minimax(depth - 1, board, -np.inf, np.inf, not isMaximizing,player))
-            board = old_board
-            if (value > bestMove):
-                #print("Best score: ", str(bestMove))
-                #print("Best move: ", str(bestMoveFinal))
-                bestMove = value
-                bestMoveFinal = move
-        return bestMoveFinal
-        """
+
 
     def minimax(self,depth, board, alpha, beta, is_maximizing, player):
         if not is_maximizing:
@@ -123,9 +109,6 @@ class Game:
     def display(self,board):
         print(convert_to_readable(board))
 
-
-
-
 def playGame(depth):
     game = Game()
     board = classic_board
@@ -150,7 +133,126 @@ def playGame(depth):
     return
 
 
+def update_visuals(move,board):
+    move_locs = [int(e) for e in list(filter(str.isdigit, move))]
+    x0 = move_locs[0]
+    y0 = move_locs[1]
+    piece = board[y0][x0]
+
+    li = pyg.image.load
+
+    facings = ['NE', 'SE', 'SW', 'NW']
+    move = move[:-1]
+    if move[0] == 'r':
+        if move[-1] == 'L':
+            new_facing = facings[(facings.index(piece.facing) - 1) % 4]
+        elif move[-1] == 'R':
+            new_facing = facings[(facings.index(piece.facing) + 1) % 4]
+        if piece.type == 'pyr':
+            classic_starting[(y0,x0)] = li(globals()[f'{piece.team}{piece.type}_{new_facing}'].image)
+        elif piece.type == 'dj':
+            if new_facing == 'NW' or new_facing == 'SE':
+                classic_starting[(y0,x0)] = li(globals()[f'{piece.team}dj_NW_SE'].image)
+            elif new_facing == 'NE' or new_facing == 'SW':
+
+                classic_starting[(y0,x0)] = li(globals()[f'{piece.team}dj_NE_SW'].image)
+    if move[0] == 'm':
+        x1 = move_locs[2]
+        y1 = move_locs[3]
+
+        classic_starting[(y1,x1)] = li(piece.image)
+        classic_starting[(y0,x0)] = None
+    elif move[0] == 'd':
+        x1 = move_locs[2]
+        y1 = move_locs[3]
+
+        classic_starting[(y0,x0)] = classic_starting[(y1,x1)]
+        classic_starting[(y1,x1)] = li(piece.image)
+
+    elif move[:2] == 'sp':
+        x1 = move_locs[2]
+        y1 = move_locs[3]
+
+        classic_starting[(y0,x0)] = li(globals()[f'{piece.team}ob'].image)
+        classic_starting[(y1,x1)] = li(globals()[f'{piece.team}ob'].image)
+
+    elif move[:2] == 'st':
+        x1 = move_locs[2]
+        y1 = move_locs[2]
+
+        classic_starting[(y0,x0)] = None
+        classic_starting[(y1,x1)] = li(globals()[f'{piece.team}sob'].image)
+
+
+def render_background(WIN):
+    WIDTH = 1000
+    HEIGHT = int((WIDTH / 10) * 8)
+    bg = pyg.image.load(dir.joinpath("images/board.png"))
+    bg = pyg.transform.smoothscale(bg, (WIDTH, HEIGHT))
+    WIN.blit(bg, (0, 0))
+
+
+def render_board(WIN):
+    scale = 1000 / 1600
+    piece_width = int(128 * scale) - 2
+    piece_height = int(128 * scale) - 4
+
+    render_background(WIN)
+    for i in range(8):
+        for j in range(10):
+            if classic_starting[(i,j)] is not None:
+                x = 115 * scale + 2 + j * (piece_width + 8.2)
+                y = 110 * scale + 1 + i * (piece_height + 7.8)
+
+                piece_img = classic_starting[(i,j)]
+
+                piece_img = pyg.transform.smoothscale(piece_img.convert(), (piece_width, piece_height))
+                WIN.blit(piece_img, (x, y))
+    pyg.display.flip()
+
+
+def render_txt_game(txt_game):
+    pyg.init()
+
+    WIDTH = 1000
+    HEIGHT = int((WIDTH / 10) * 8)
+    WIN = pyg.display.set_mode((WIDTH, HEIGHT))
+
+    pyg.display.set_caption("Khet")
+    pyg.display.set_icon(pyg.image.load(ssob.image))
+
+    render_background(WIN)
+    render_board(WIN)
+    pyg.display.flip()
+    pyg.time.wait(2000)
+    board = classic_board
+    player = 's'
+    while True:
+        pyg.time.delay(50)  ##stops cpu dying
+        for event in pyg.event.get():
+            if event.type == pyg.QUIT:
+                pyg.quit()
+                sys.exit()
+
+        for move in open(txt_game,'r'):
+            if move == 'DRAW' or move == 'WIN/LOSS':
+                print(move)
+            else:
+
+                update_visuals(move,board)
+
+                render_board(WIN)
+                board = Game().get_next_board(board,move[:-1],player)
+                print(Game().display(board))
+                player = Game().reverse_player(player)
+                pyg.event.pump()
+                pyg.time.wait(2000)
+
+        break
+
+
 if __name__ == '__main__':
-    playGame(3)
+    playGame(2)
+    #render_txt_game('2264767c712c4678aa482728a7ef4641.txt')
 
 

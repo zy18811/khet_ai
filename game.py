@@ -4,6 +4,7 @@ import sys
 from ai.globals import *
 pyg.init()
 
+
 def reset():
     global classic_starting, classic_board, super_board, super_super_board
 
