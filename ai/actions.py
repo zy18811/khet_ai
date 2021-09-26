@@ -17,6 +17,14 @@ def convert_to_readable(board):
         output += '\n'
     return output
 
+def get_pos_4_coords(x,y):
+    scale = 1000 / 1600
+    piece_width = int(128 * scale) - 1
+    piece_height = int(128 * scale) - 4
+    x_pos = 115 * scale + 2 + x * (piece_width + 8.2)
+    y_pos = 110 * scale + 1 + y * (piece_height + 7.8)
+    return x_pos,y_pos
+
 
 def get_flipped_piece(piece):
     if piece.team == 's':
@@ -187,7 +195,7 @@ def laser_shoot(board,player):
                     y = 9
 
                 hit_target = True
-                return None, None, False
+                return y, x, False
             #print(cur_orientation)
             if board[x][y] == 0:
 
@@ -239,7 +247,7 @@ def laser_shoot(board,player):
 
         except Exception as e:
             hit_target = True
-            return None, None, False
+            return y, x, False
 
 
 def laser_eval(state,player):

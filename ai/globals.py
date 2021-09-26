@@ -1,3 +1,5 @@
+import numpy as np
+
 from ai.piece_init import *
 
 classic_starting = {(0,0):None, (0,1):None, (0,2):None, (0,3):None, (0,4):pyg.image.load(rsob.image), (0,5):pyg.image.load(rpha.image),
@@ -27,21 +29,7 @@ classic_board = [[0,0,0,0,rsob,rpha,rsob,rpyr_SE,0,0],
                  [0,0,0,0,0,0,0,spyr_NE,0,0],
                  [0,0,spyr_NW,ssob,spha,ssob,0,0,0,0]]
 
-super_board = [[0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0]]
+super_board = np.zeros(shape = (8,10),dtype = object)
 
-super_super_board = [[0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0]]
+super_super_board = np.zeros(shape= (8,10), dtype = object)
 

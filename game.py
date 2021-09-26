@@ -2,6 +2,7 @@ import pygame as pyg
 import numpy
 import sys
 from ai.globals import *
+from ai.actions import get_pos_4_coords
 pyg.init()
 
 
@@ -325,15 +326,6 @@ def Do_Move(OriginalPos, FinalPosition, WIN):
 
 def clear_node(x,y):
     classic_starting[(y,x)] = None
-
-
-def get_pos_4_coords(x,y):
-    scale = 1000 / 1600
-    piece_width = int(128 * scale) - 1
-    piece_height = int(128 * scale) - 4
-    x_pos = 115 * scale + 2 + x * (piece_width + 8.2)
-    y_pos = 110 * scale + 1 + y * (piece_height + 7.8)
-    return x_pos,y_pos
 
 
 def refresh_display(win, grid):

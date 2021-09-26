@@ -1,12 +1,10 @@
 import numpy as np
-import pygame
 from tqdm import tqdm
-from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state
+from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, get_pos_4_coords
 from ai.globals import *
 import uuid
 from multiprocessing import Pool, cpu_count
 import sys
-
 
 class Game:
     def __init__(self,evalulate_position = None):
@@ -110,6 +108,7 @@ class Game:
     def display(self,board):
         print(convert_to_readable(board))
 
+
 def playGame(depth):
     game = Game()
     board = classic_board
@@ -212,6 +211,155 @@ def render_board(WIN):
     pyg.display.flip()
 
 
+def laser_visual(board,player_colour):
+    hit_target = False
+    laser_start_tile = [(-1, 0), (8, 9)]
+    laser_start_orientation = ["N", "S"]
+
+    orients = ["N", "E", "S", "W"]
+    orientation_val = [(1, 0), (0, -1), (-1, 0), (0, 1)]
+    pyramid_facings = ["NE", "SE", "SW", "NW"]
+    pyramid_orientations = [("N", "E"), ("S", "E"), ("S", "W"), ("N", "W")]
+
+    cur_tile = laser_start_tile[player_colour]
+    cur_orientation = laser_start_orientation[player_colour]
+
+    while not hit_target:
+        try:
+            next_tile = np.add(cur_tile, orientation_val[orients.index(cur_orientation)])
+            x = next_tile[0]
+            y = next_tile[1]
+            if x < 0 or y < 0 or x > 7 or y > 9:
+                if x == -1:
+                    x = 0
+                if y == -1:
+                    y = 0
+                if x == 8:
+                    x = 7
+                if y == 10:
+                    y = 9
+
+                if super_board[x][y] != 0:
+                    super_super_board[x][y] = dir.joinpath("images/laser_splash_%s.png" % cur_orientation)
+                else:
+                    super_board[x][y] = dir.joinpath("images/laser_splash_%s.png" % cur_orientation)
+                # other wall impact
+                return
+
+            # print(cur_orientation)
+            if board[x][y] == 0:
+
+                # Laser stuff for empty tile
+
+                cur_tile = next_tile
+                # print("empty")
+                # Draw laser with current orientation
+                if cur_orientation == 'N' or cur_orientation == "S":
+                    if super_board[x][y] != 0:
+                        super_super_board[x][y] = dir.joinpath("images/laser_NS.png")
+                    else:
+                        super_board[x][y] = dir.joinpath("images/laser_NS.png")
+                else:
+                    if super_board[x][y] != 0:
+                        super_super_board[x][y] = dir.joinpath("images/laser_EW.png")
+                    else:
+                        super_board[x][y] = dir.joinpath("images/laser_EW.png")
+                # Play sound
+            elif board[x][y].type == "pyr":
+                # Laser stuff for pyramids
+                if cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
+                    # Change laser direction
+                    ori_arr = [e for e in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]]
+                    ori_arr.remove(cur_orientation)
+
+                    cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
+                    cur_tile = next_tile
+                    # del_orients = numpy.concatenate(([cur_orientation] ,pyramid_orientations[pyramid_facings.index(board[x][y].facing)]))
+
+                    # Draw laser bounce
+                    if super_board[x][y] != 0:
+                        super_super_board[x][y] = dir.joinpath("images/laser_%s.png" % board[x][y].facing)
+                    else:
+                        super_board[x][y] = dir.joinpath("images/laser_%s.png" % board[x][y].facing)
+
+                    # Play sound
+                else:
+                    # Destroy piece
+                    if super_board[x][y] != 0:
+                        super_super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
+                    else:
+                        super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
+                    classic_starting[(x,y)] = None
+                    return
+
+
+            elif board[x][y].type == "dj":
+
+                # Laser stuff for Djeds
+                # Change laser direction
+                if cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
+                    ori_arr = [e for e in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]]
+                    ori_arr.remove(cur_orientation)
+                    cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
+                    pic_facing = ''.join(pyramid_orientations[pyramid_facings.index(board[x][y].facing)])
+                elif cur_orientation in pyramid_orientations[(pyramid_facings.index(board[x][y].facing) + 2) % 4]:
+                    ori_arr = [e for e in pyramid_orientations[(pyramid_facings.index(board[x][y].facing) + 2) % 4]]
+                    ori_arr.remove(cur_orientation)
+                    cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
+                    pic_facing = ''.join(pyramid_orientations[(pyramid_facings.index(board[x][y].facing) + 2) % 4])
+                cur_tile = next_tile
+
+                # Draw bounce
+                if super_board[x][y] != 0:
+                    super_super_board[x][y] = dir.joinpath("images/laser_%s.png" % pic_facing)
+                else:
+                    super_board[x][y] = dir.joinpath("images/laser_%s.png" % pic_facing)
+                # Play sound
+            else:
+                # Laser stuff for Pharoahs and Obelisks
+                # Destroy piece
+                super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
+                classic_starting[(x,y)] = None
+                return
+                # End laser function
+
+        except Exception as e:
+            # Draw the wall impact
+            super_board[x][y] = dir.joinpath("laser_splash_%s.png" % cur_orientation)
+            return
+
+
+def clear_laser():
+    global super_board, super_super_board
+    super_board = np.zeros(shape=(8, 10), dtype=object)
+    super_super_board = np.zeros(shape=(8, 10), dtype=object)
+
+
+def render_laser(WIN,board,player):
+    scale = 1000 / 1600
+    piece_width = int(128 * scale) - 2
+    piece_height = int(128 * scale) - 4
+
+    for i in range(10):
+        for j in range(8):
+            try:
+                img1 = pyg.image.load(super_board[j][i])
+                img1 = pyg.transform.smoothscale(img1, (piece_width, piece_height))
+                x,y = get_pos_4_coords(i,j)
+                WIN.blit(img1,(x,y))
+            except:
+                pass
+            try:
+                img2 = pyg.image.load(super_super_board[j][i])
+                img2 = pyg.transform.smoothscale(img2, (piece_width, piece_height))
+                x, y = get_pos_4_coords(i, j)
+                WIN.blit(img2, (x, y))
+            except:
+                pass
+
+    pyg.display.flip()
+
+
 def render_txt_game(txt_game):
     pyg.init()
 
@@ -228,32 +376,45 @@ def render_txt_game(txt_game):
     pyg.time.wait(2000)
     board = classic_board
     player = 's'
+
     while True:
-        pyg.time.delay(50)  ##stops cpu dying
         for event in pyg.event.get():
-            if event.type == pyg.QUIT:
+            if event == pyg.QUIT:
                 pyg.quit()
                 sys.exit()
 
         for move in open(txt_game,'r'):
+            pyg.event.get()
             if move == 'DRAW' or move == 'WIN/LOSS':
                 print(move)
             else:
-
+                Game().display(board)
                 update_visuals(move,board)
-
                 render_board(WIN)
+                pyg.time.wait(2000)
+
                 board = Game().get_next_board(board,move[:-1],player)
-                print(Game().display(board))
+
+                if player == 's':
+                    player_num = 1
+                else:
+                    player_num = 0
+                laser_visual(board,player_num)
+                render_laser(WIN,board,player)
+                pyg.time.wait(2000)
+
+                clear_laser()
+                render_laser(WIN,board,player)
+
                 player = Game().reverse_player(player)
                 pyg.event.pump()
                 pyg.time.wait(2000)
 
-        break
+
 
 
 if __name__ == '__main__':
-    playGame(2)
-    #render_txt_game('2264767c712c4678aa482728a7ef4641.txt')
+    #playGame(2)
+    render_txt_game('2264767c712c4678aa482728a7ef4641.txt')
 
 
