@@ -110,7 +110,7 @@ def possible_actions_4_state(state,player):
                                         actions.append(f'split_sob*{i},{j}*{n},{m}')
                             elif piece.type == 'ob' and board[m][n].type == 'ob' and board[m][n].team == player_colour:
                                 actions.append(f'stack_ob*{i},{j}*{n},{m}')
-                            elif piece.type == 'dj' and (board[m][n].type =='pyr' or board[m][n].type == 'ob' or board[m][n].type == 'sob'):
+                            elif piece.type == 'dj' and (board[m][n].type == 'pyr' or board[m][n].type == 'ob' or board[m][n].type == 'sob'):
                                 if board[m][n].team == 'r':
                                     if not (i == 9 or (i == 1 and j == 0) or (i == 1 and j == 7)):
                                         actions.append(f'dj_swap*{i},{j}*{n},{m}')
@@ -255,7 +255,13 @@ def laser_eval(state,player):
     hit_x, hit_y, bool = laser_shoot(copy,player)
     if bool:
         hit_piece = state[hit_y][hit_x]
-        state[hit_y][hit_x] = 0
+        if hit_piece.type == 'sob':
+            if hit_piece.team == 's':
+                state[hit_y][hit_x] = sob
+            elif hit_piece.team == 'r':
+                state[hit_y][hit_x] = rob
+        else:
+            state[hit_y][hit_x] = 0
     else:
         hit_piece = None
     return state, hit_piece
