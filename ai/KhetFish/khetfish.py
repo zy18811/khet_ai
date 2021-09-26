@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 from tqdm import tqdm
-from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state
+from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, lasershoot
 from ai.globals import *
 import uuid
 from multiprocessing import Pool, cpu_count
@@ -21,36 +21,57 @@ class Game:
             for j in range(10):
                 piece = board[i][j]
                 # Calculates value for each pyramid existing and its position
-                if piece == 'pyr':
-                    if piece.team == player:
-                        pos_score -= piece.value
-                    elif piece.team != player:
-                        pos_score += piece.value
-                    elif piece.team != player:
-                        pos_score -= piece.value
-                # Calculates value for Obelisk's existing
-                elif piece == 'ob':
-                    if piece.team == player:
-                        pos_score += piece.value
-                    elif piece.team != player:
-                        pos_score -= piece.value
-                # Calculates value for Djed's positions
-                elif piece == 'dj':
-                    pass
-                # Stores the location of the Pharoahs
-                elif piece.type == 'pha':
-                    pha_i = i
-                    pha_j = j
-                    if piece.team == player:
-                        pos_score += piece.value
-                    elif piece.team != player:
-                        pos_score -= piece.value
+                if piece != 0:
+                    if piece.type == 'pyr':
+                        if piece.team == player:
+                            pos_score -= piece.value
+                        elif piece.team != player:
+                            pos_score += piece.value
+                        elif piece.team != player:
+                            pos_score -= piece.value
+                    # Calculates value for Obelisk's existing
+                    elif piece.type == 'ob':
+                        if piece.team == player:
+                            pos_score += piece.value
+                        elif piece.team != player:
+                            pos_score -= piece.value
+                    # Calculates value for Djed's positions
+                    elif piece.type == 'dj':
+                        pass
+                    # Stores the location of the Pharoahs
+                    elif piece.type == 'pha':
+                        if piece.team == player:
+                            pos_score += piece.value
+                            player_pha_i = i
+                            player_pha_j = j
+                        elif piece.team != player:
+                            pos_score -= piece.value
+                            enemy_pha_i = i
+                            enemy_pha_j = j
+                    else:
+                        pass
                 else:
                     pass
 
-        # Laser Evaluation
-        laser_shoot = actions.lasershoot(board, player)
+        # Laser Manhattan Evaluation
+        laser_shoot = lasershoot(board, player)
+        manhattan_score = abs(laser_shoot[0]-enemy_pha_i + laser_shoot[1]-enemy_pha_j)
+        pos_score -= manhattan_score / 4
+
         # King Safety Evaluation
+        directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+        for direction in directions:
+            try:
+                piece = board(player_pha_i+direction[0], player_pha_j+direction[1])
+                if piece != 0:
+                    if piece.type == 'ob':
+                        pos_score += piece.value
+                    elif piece.type == 'sob':
+                        pos_score += piece.value
+                else:
+                    pos_score -= 1
+            except:
+                pass
 
         return pos_score
 
