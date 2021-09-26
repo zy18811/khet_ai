@@ -187,7 +187,7 @@ def laser_shoot(board,player):
                     y = 9
 
                 hit_target = True
-                return None, None
+                return None, None, False
             #print(cur_orientation)
             if board[x][y] == 0:
 
@@ -198,7 +198,6 @@ def laser_shoot(board,player):
                 #Draw laser with current orientation
                 #Play sound
             elif board[x][y].type == "pyr":
-
                 #Laser stuff for pyramids
                 if cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
                     #Change laser direction
@@ -216,7 +215,7 @@ def laser_shoot(board,player):
 
                     #End laser function
                     hit_target = True
-                    return y, x
+                    return y, x, True
 
             elif board[x][y].type == "dj":
 
@@ -231,25 +230,22 @@ def laser_shoot(board,player):
                     ori_arr.remove(cur_orientation)
                     cur_orientation = orients[(orients.index(ori_arr[0]) + 2) % 4]
                 cur_tile = next_tile
-
-
             else:
                 #Laser stuff for Pharoahs and Obelisks
                 #Destroy piece
 
-                return y,x
+                return y,x, True
                 #End laser function
-
 
         except Exception as e:
             hit_target = True
-            return None, None
+            return None, None, False
 
 
 def laser_eval(state,player):
     copy = deepcopy(state)
-    hit_x, hit_y = laser_shoot(copy,player)
-    if hit_x is not None and hit_y is not None:
+    hit_x, hit_y, bool = laser_shoot(copy,player)
+    if bool:
         hit_piece = state[hit_y][hit_x]
         state[hit_y][hit_x] = 0
     else:

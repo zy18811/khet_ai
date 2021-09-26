@@ -1,11 +1,12 @@
 import numpy as np
 import pygame
 from tqdm import tqdm
-from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, apply_move_visuals
+from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state
 from ai.globals import *
 import uuid
 from multiprocessing import Pool, cpu_count
 import sys
+
 
 class Game:
     def __init__(self,evalulate_position = None):
