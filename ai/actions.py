@@ -1,9 +1,7 @@
-from sklearn import preprocessing
-#from game import convert_to_readable
-from sklearn.preprocessing import OneHotEncoder
-from ai.piece_init import *
+from ai.globals import *
 from copy import deepcopy
 import numpy as np
+#from game import WIDTH, HEIGHT, get_pos_4_coords
 
 
 
@@ -96,9 +94,9 @@ def possible_actions_4_state(state,player):
                 #print(i,j)
                 for m in range(j-1,j+2):
                     for n in range(i-1,i+2):
-                        if (0 <= m <= 7) and (0 <= n <= 9) and not ( m==j and n == i):
+                        if (0 <= m <= 7) and (0 <= n <= 9) and not (m == j and n == i):
                             if board[m][n] == 0:
-                                if n != 0 or (n != 8 and m != 0) or (n != 8 and m != 7):
+                                if n != 0 and (n != 8 and m != 0) and (n != 8 and m != 7):
                                     actions.append(f'm*{i},{j}*{n},{m}')
                                     if piece.type == 'sob':
                                         actions.append(f'split_sob*{i},{j}*{n},{m}')
@@ -317,6 +315,72 @@ def apply_move(move, state,player):
 
     n_state,_ = laser_eval(n_state,player)
     return n_state
+
+
+def set_board_image(x,y,image,WIN):
+    WIN.blit(image, (get_pos_4_coords(x,y)))
+
+
+def apply_move_visuals(state,move, WIN):
+    bg = pyg.image.load(dir.joinpath("images/board.png"))
+    bg = pyg.transform.smoothscale(bg, (WIDTH, HEIGHT))
+    WIN.blit(bg, (0, 0))
+
+    n_state = deepcopy(state)
+
+    facings = ['NE', 'SE', 'SW', 'NW']
+    move_locs = [int(e) for e in list(filter(str.isdigit, move))]
+    x0 = move_locs[0]
+    y0 = move_locs[1]
+    piece = n_state[y0][x0]
+    li = pyg.image.load
+
+    if move[0] == 'r':
+        if move[-1] == 'L':
+            new_facing = facings[(facings.index(piece.facing) - 1) % 4]
+        elif move[-1] == 'R':
+            new_facing = facings[(facings.index(piece.facing) + 1) % 4]
+        if piece.type == 'pyr':
+            set_board_image(x0,y0, li(globals()[f'{piece.team}{piece.type}_{new_facing}'].image),WIN)
+            #classic_starting[(y0,x0)] = li(globals()[f'{piece.team}{piece.type}_{new_facing}'].image)
+        elif piece.type == 'dj':
+            if new_facing == 'NW' or new_facing == 'SE':
+                set_board_image(x0,y0,li(globals()[f'{piece.team}dj_NW_SE'].image),WIN)
+                #classic_starting[(y0,x0)] = li(globals()[f'{piece.team}dj_NW_SE'].image)
+            elif new_facing == 'NE' or new_facing == 'SW':
+                set_board_image(x0,y0,li(globals()[f'{piece.team}dj_NE_SW'].image),WIN)
+                #classic_starting[(y0,x0)] = li(globals()[f'{piece.team}dj_NE_SW'].image)
+    if move[0] == 'm':
+        x1 = move_locs[2]
+        y1 = move_locs[3]
+        set_board_image(x1,y1,li(piece.image),WIN)
+        #classic_starting[(y1,x1)] = li(piece.image)
+        #set_board_image(x0,y0,None)
+        #classic_starting[(y0,x0)] = None
+    elif move[0] == 'd':
+        x1 = move_locs[2]
+        y1 = move_locs[3]
+        set_board_image(x0,y0,classic_starting[(y1,x1)],WIN)
+        #classic_starting[(y0,x0)] = classic_starting[(y1,x1)]
+        set_board_image(x1,y1,li(piece.image),WIN)
+        #classic_starting[(y1,x1)] = li(piece.image)
+
+    elif move[:2] == 'sp':
+        x1 = move_locs[2]
+        y1 = move_locs[3]
+        set_board_image(x0,y0,li(globals()[f'{piece.team}ob'].image),WIN)
+        #classic_starting[(y0,x0)] = li(globals()[f'{piece.team}ob'].image)
+        set_board_image(x1,y1,li(globals()[f'{piece.team}ob'].image),WIN)
+        #classic_starting[(y1,x1)] = li(globals()[f'{piece.team}ob'].image)
+
+    elif move[:2] == 'st':
+        x1 = move_locs[2]
+        y1 = move_locs[2]
+        #set_board_image(x0,y0,None,WIN)
+        #classic_starting[(y0,x0)] = None
+        set_board_image(x1,y1,li(globals()[f'{piece.team}sob'].image),WIN)
+        #classic_starting[(y1,x1)] = li(globals()[f'{piece.team}sob'].image)
+    return classic_starting
 
 
 

@@ -1,86 +1,8 @@
 import pygame as pyg
-pyg.init()
 import numpy
 import sys
-import time
-
-
-class Piece:
-    def __init__(self,team,piece_type,facing,image):
-        self.team = team
-        self.type = piece_type
-        self.facing = facing
-        self.image = image
-
-
-spyr_NE = Piece('s','pyr','NE','silver_pyramid_NE.png')
-spyr_SE = Piece('s','pyr','SE','silver_pyramid_SE.png')
-spyr_SW = Piece('s','pyr','SW','silver_pyramid_SW.png')
-spyr_NW = Piece('s','pyr','NW','silver_pyramid_NW.png')
-
-rpyr_NE = Piece('r','pyr','NE','red_pyramid_NE.png')
-rpyr_SE = Piece('r','pyr','SE','red_pyramid_SE.png')
-rpyr_SW = Piece('r','pyr','SW','red_pyramid_SW.png')
-rpyr_NW = Piece('r','pyr','NW','red_pyramid_NW.png')
-
-sdj_NE_SW = Piece('s','dj','NE','silver_jed_NE_SW.png')
-sdj_NW_SE = Piece('s','dj','SE','silver_jed_NW_SE.png')
-
-rdj_NE_SW = Piece('r','dj','NE','red_jed_NE_SW.png')
-rdj_NW_SE = Piece('r','dj','SE','red_jed_NW_SE.png')
-
-sob = Piece('s','ob','','silver_obelisk_single.png')
-rob = Piece('r','ob','','red_obelisk_single.png')
-ssob = Piece('s','sob','','silver_obelisk_double.png')
-rsob = Piece('r','sob','','red_obelisk_double.png')
-spha = Piece('s','pha','','silver_pharoah_new.png')
-rpha = Piece('r','pha','','red_pharoah_new.png')
-
-
-classic_starting = {(0,0):None, (0,1):None, (0,2):None, (0,3):None, (0,4):pyg.image.load(rsob.image), (0,5):pyg.image.load(rpha.image),
-                    (0,6):pyg.image.load(rsob.image), (0,7):pyg.image.load(rpyr_SE.image), (0,8):None, (0,9):None,
-                    (1,0):None,(1, 1):None, (1, 2):pyg.image.load(rpyr_SW.image), (1, 3):None, (1,4):None, (1,5):None,
-                    (1,6):None, (1,7):None, (1,8):None, (1,9):None, (2,0):None,(2,1):None, (2,2):None,
-                    (2,3):pyg.image.load(spyr_NW.image),(2,4):None,(2,5):None,(2,6):None,(2,7):None,(2,8):None,(2,9):None,
-                    (3,0):pyg.image.load(rpyr_NE.image),(3,1):None,(3,2):pyg.image.load(spyr_SW.image), (3,3):None,
-                    (3,4):pyg.image.load(rdj_NE_SW.image),(3,5):pyg.image.load(rdj_NW_SE.image),(3,6):None,
-                    (3,7):pyg.image.load(rpyr_SE.image),(3,8):None,(3,9):pyg.image.load(spyr_NW.image),
-                    (4, 0): pyg.image.load(rpyr_SE.image), (4, 1): None, (4, 2): pyg.image.load(spyr_NW.image), (4, 3): None,
-                    (4, 4): pyg.image.load(sdj_NW_SE.image), (4, 5): pyg.image.load(sdj_NE_SW.image), (4, 6): None,
-                    (4, 7): pyg.image.load(rpyr_NE.image), (4, 8): None, (4, 9): pyg.image.load(spyr_SW.image),
-                    (5,0):None,(5,1):None,(5,2):None,(5,3):None,(5,4):None,(5,5):None,(5,6):pyg.image.load(rpyr_SE.image),
-                    (5,7):None,(5,8):None,(5,9):None,(6,0):None,(6,1):None,(6,2):None,(6,3):None,(6,4):None,(6,5):None,
-                    (6,6):None, (6,7):pyg.image.load(spyr_NE.image),(6,8):None,(6,9):None,(7,0):None, (7,1):None,
-                    (7,2):pyg.image.load(spyr_NW.image),(7,3):pyg.image.load(ssob.image),(7,4):pyg.image.load(spha.image),
-                    (7,5):pyg.image.load(ssob.image),(7,6):None,(7,7):None,(7,8):None,(7,9):None}
-
-
-classic_board = [[0,0,0,0,rsob,rpha,rsob,rpyr_SE,0,0],
-                 [0,0,rpyr_SW,0,0,0,0,0,0,0],
-                 [0,0,0,spyr_NW,0,0,0,0,0,0],
-                 [rpyr_NE,0,spyr_SW,0,rdj_NE_SW,rdj_NW_SE,0,rpyr_SE,0,spyr_NW],
-                 [rpyr_SE,0,spyr_NW,0,sdj_NW_SE,sdj_NE_SW,0,rpyr_NE,0,spyr_SW],
-                 [0,0,0,0,0,0,rpyr_SE,0,0,0],
-                 [0,0,0,0,0,0,0,spyr_NE,0,0],
-                 [0,0,spyr_NW,ssob,spha,ssob,0,0,0,0]]
-
-super_board = [[0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0]]
-
-super_super_board = [[0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0],
-                 [0,0,0,0,0,0,0,0,0,0]]
+from ai.globals import *
+pyg.init()
 
 def reset():
     global classic_starting, classic_board, super_board, super_super_board
@@ -140,14 +62,16 @@ def reset():
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
+
 WIDTH = 1000
 HEIGHT = int((WIDTH/10)*8)
+
 WIN = pyg.display.set_mode((WIDTH, HEIGHT))
 
 
 
 pyg.display.set_caption("Khet")
-pyg.display.set_icon(pyg.image.load("silver_obelisk_double.png"))
+pyg.display.set_icon(pyg.image.load(ssob.image))
 WHITE = (255, 255, 255)
 GREY = (128, 128, 128)
 YELLOW = (204, 204, 0)
@@ -155,8 +79,9 @@ BLUE = (50, 255, 255)
 BLACK = (0, 0, 0)
 
 #Music
-pyg.mixer.music.load('music.wav')
+#pyg.mixer.music.load('music.wav')
 #pyg.mixer.music.play(-1)
+
 
 class Node:
     def __init__(self, row, col,image =None):
@@ -184,8 +109,6 @@ class Node:
                 self.occupied = 1
 
                 piece_img = classic_starting[(self.row, self.col)]
-
-
 
                 piece_img = pyg.transform.smoothscale(piece_img.convert(), (self.piece_width,self.piece_height))
                 self.image = piece_img
@@ -238,9 +161,9 @@ def laser_shooter(player_colour, board):
                     y = 9
 
                 if super_board[x][y] != 0:
-                    super_super_board[x][y] = "laser_splash_%s.png" % cur_orientation
+                    super_super_board[x][y] = dir.joinpath("images/laser_splash_%s.png" % cur_orientation)
                 else:
-                    super_board[x][y] = "laser_splash_%s.png" % cur_orientation
+                    super_board[x][y] = dir.joinpath("images/laser_splash_%s.png" % cur_orientation)
                 # other wall impact
 
                 hit_target = True
@@ -255,14 +178,14 @@ def laser_shooter(player_colour, board):
                 #Draw laser with current orientation
                 if cur_orientation == 'N' or cur_orientation == "S":
                     if super_board[x][y] != 0:
-                        super_super_board[x][y] = "laser_NS.png"
+                        super_super_board[x][y] = dir.joinpath("images/laser_NS.png")
                     else:
-                        super_board[x][y] = "laser_NS.png"
+                        super_board[x][y] = dir.joinpath("images/laser_NS.png")
                 else:
                     if super_board[x][y] != 0:
-                        super_super_board[x][y] = "laser_EW.png"
+                        super_super_board[x][y] = dir.joinpath("images/laser_EW.png")
                     else:
-                        super_board[x][y] = "laser_EW.png"
+                        super_board[x][y] = dir.joinpath("images/laser_EW.png")
                 #Play sound
             elif board[x][y].type == "pyr":
 
@@ -278,16 +201,16 @@ def laser_shooter(player_colour, board):
 
                     #Draw laser bounce
                     if super_board[x][y] != 0:
-                        super_super_board[x][y] = "laser_%s.png" % board[x][y].facing
+                        super_super_board[x][y] = dir.joinpath("images/laser_%s.png" % board[x][y].facing)
                     else:
-                        super_board[x][y] = "laser_%s.png" % board[x][y].facing
+                        super_board[x][y] = dir.joinpath("images/laser_%s.png" % board[x][y].facing)
                     #Play sound
                 else:
                     #Destroy piece
                     if super_board[x][y] != 0:
-                        super_super_board[x][y] = "laser_death_%s.png" % cur_orientation
+                        super_super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
                     else:
-                        super_board[x][y] = "laser_death_%s.png" % cur_orientation
+                        super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
                     #End laser function
                     hit_target = True
                     return y, x
@@ -310,14 +233,14 @@ def laser_shooter(player_colour, board):
 
                 #Draw bounce
                 if super_board[x][y] != 0:
-                    super_super_board[x][y] = "laser_%s.png" % pic_facing
+                    super_super_board[x][y] = dir.joinpath("images/laser_%s.png" % pic_facing)
                 else:
-                    super_board[x][y] = "laser_%s.png" % pic_facing
+                    super_board[x][y] = dir.joinpath("images/laser_%s.png" % pic_facing)
                 #Play sound
             else:
                 #Laser stuff for Pharoahs and Obelisks
                 #Destroy piece
-                super_board[x][y] = "laser_death_%s.png" % cur_orientation
+                super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
                 return y,x
                 #End laser function
 
@@ -325,7 +248,7 @@ def laser_shooter(player_colour, board):
         except Exception as e:
             #Draw the wall impact
             print(e)
-            super_board[x][y] = "laser_splash_%s.png" % cur_orientation
+            super_board[x][y] = dir.joinpath("laser_splash_%s.png" % cur_orientation)
             hit_target = True
             return None, None
 
@@ -413,7 +336,7 @@ def get_pos_4_coords(x,y):
 
 
 def refresh_display(win, grid):
-    bg = pyg.image.load("board.png")
+    bg = pyg.image.load(dir.joinpath("images/board.png"))
     bg = pyg.transform.smoothscale(bg, (WIDTH, HEIGHT))
     WIN.blit(bg, (0, 0))
     update_display(win,grid)
@@ -461,22 +384,22 @@ def set_board(node,x,y,sob_special,p):
         if classic_board[node.row][node.col].team == 's':
             if (node.row!=y or node.col != x) or sob_special:
                 classic_board[y][x] = ssob
-                set_board_image(x,y ,pyg.transform.smoothscale(pyg.image.load('silver_obelisk_double.png'),
+                set_board_image(x,y ,pyg.transform.smoothscale(pyg.image.load(ssob.image),
                                                        (node.piece_width, node.piece_height)))
             else:
                 classic_board[y][x] = sob
-                set_board_image(x, y, pyg.transform.smoothscale(pyg.image.load('silver_obelisk_single.png'),
+                set_board_image(x, y, pyg.transform.smoothscale(pyg.image.load(sob.image),
                                                                 (node.piece_width, node.piece_height)))
 
 
         elif classic_board[node.row][node.col].team == 'r':
             if (node.row!=y or node.col != x) or sob_special:
                 classic_board[y][x] = rsob
-                set_board_image(x,y ,pyg.transform.smoothscale(pyg.image.load('red_obelisk_double.png'),
+                set_board_image(x,y ,pyg.transform.smoothscale(pyg.image.load(rsob.image),
                                                        (node.piece_width, node.piece_height)))
             else:
                 classic_board[y][x] = rob
-                set_board_image(x, y, pyg.transform.smoothscale(pyg.image.load('red_obelisk_single.png'),
+                set_board_image(x, y, pyg.transform.smoothscale(pyg.image.load(rob.image),
                                                                 (node.piece_width, node.piece_height)))
 
         if (node.row != y or node.col != x) and not sob_special:
@@ -487,12 +410,12 @@ def set_board(node,x,y,sob_special,p):
             if classic_board[node.row][node.col].team == 's':
 
                 classic_board[node.row][node.col] = ssob
-                set_board_image(node.col, node.row, pyg.transform.smoothscale(pyg.image.load('silver_obelisk_double.png'),
+                set_board_image(node.col, node.row, pyg.transform.smoothscale(pyg.image.load(ssob.image),
                                                                 (node.piece_width, node.piece_height)))
 
             elif classic_board[node.row][node.col].team == 'r':
                 classic_board[node.row][node.col] = rsob
-                set_board_image(node.col, node.row, pyg.transform.smoothscale(pyg.image.load('red_obelisk_double.png'),
+                set_board_image(node.col, node.row, pyg.transform.smoothscale(pyg.image.load(rsob.image),
                                                                     (node.piece_width, node.piece_height)))
         return False
     else:
@@ -551,8 +474,8 @@ def rotate_piece(x,y,dir,current_p):
 def sob_dragged_node(x,y,current_p):
     dn = Node(x,y)
 
-    simg = pyg.image.load('silver_obelisk_single.png')
-    rimg = pyg.image.load('red_obelisk_single.png')
+    simg = pyg.image.load(sob.image)
+    rimg = pyg.image.load(rob.image)
     simg = pyg.transform.smoothscale(simg, (dn.piece_width, dn.piece_height))
     rimg = pyg.transform.smoothscale(rimg, (dn.piece_width, dn.piece_height))
 
@@ -642,8 +565,8 @@ def main(WIN, WIDTH):
                                 classic_board[hit_y][hit_x] = 0
                                 clear_node(hit_x,hit_y)
                             elif classic_board[hit_y][hit_x].type == 'sob':
-                                simg = pyg.image.load('silver_obelisk_single.png')
-                                rimg = pyg.image.load('red_obelisk_single.png')
+                                simg = pyg.image.load(sob.image)
+                                rimg = pyg.image.load(rob.image)
                                 simg = pyg.transform.smoothscale(simg,(piece_width,piece_height))
                                 rimg = pyg.transform.smoothscale(rimg,(piece_width,piece_height))
                                 if classic_board[hit_y][hit_x].team == 'r':
@@ -654,13 +577,13 @@ def main(WIN, WIDTH):
                                     set_board_image(hit_x,hit_y,simg)
                             elif classic_board[hit_y][hit_x].type == 'pha':
                                 if classic_board[hit_y][hit_x].team == 'r':
-                                    vs = pyg.image.load("silver_victory.png")
+                                    vs = pyg.image.load(dir.joinpath("images/silver_victory.png"))
                                     vs = pyg.transform.smoothscale(vs, (WIDTH, HEIGHT))
                                     WIN.blit(vs, (0, 0))
                                     pyg.display.flip()
                                     victor = True
                                 elif classic_board[hit_y][hit_x].team == 's':
-                                    vs = pyg.image.load("red_victory.png")
+                                    vs = pyg.image.load(dir.joinpath("images/red_victory.png"))
                                     vs = pyg.transform.smoothscale(vs, (WIDTH, HEIGHT))
                                     WIN.blit(vs, (0, 0))
                                     pyg.display.flip()
