@@ -1,13 +1,15 @@
-from ai.globals import *
 from copy import deepcopy
-import numpy as np
-#from game import WIDTH, HEIGHT, get_pos_4_coords
 
+import numpy as np
+
+from ai.globals import *
+
+
+#from game import WIDTH, HEIGHT, get_pos_4_coords
 
 
 def convert_to_readable(board):
     output = ''
-
     for i in board:
         for j in i:
             try:
@@ -16,6 +18,7 @@ def convert_to_readable(board):
                 output += f"{j}, "
         output += '\n'
     return output
+
 
 def get_pos_4_coords(x,y):
     scale = 1000 / 1600
@@ -161,9 +164,9 @@ def all_actions():
 
 def laser_shoot(board,player):
     if player == 's':
-        ix = 0
-    else:
         ix = 1
+    else:
+        ix = 0
 
     hit_target = False
     laser_start_tile = [(-1, 0), (8, 9)]
@@ -275,17 +278,23 @@ def is_terminal(state,player):
     else: return False
 
 
-def apply_move(move, state,player):
+def is_over(board):
+    if np.sum(np.isin([f'{p.team} {p.type}' for row in board for p in row if p != 0], ['s pha', 'r pha'])) == 2:
+        return False
+    else:
+        return True
 
+
+def move_piece(move,state,player):
     n_state = deepcopy(state)
 
-    facings = ['NE','SE','SW','NW']
-    move_locs = [int(e) for e in list(filter(str.isdigit,move))]
+    facings = ['NE', 'SE', 'SW', 'NW']
+    move_locs = [int(e) for e in list(filter(str.isdigit, move))]
     x0 = move_locs[0]
     y0 = move_locs[1]
     piece = n_state[y0][x0]
-    #print(possible_actions_4_state(state))
-    #print(convert_to_readable(state))
+    # print(possible_actions_4_state(state))
+    # print(convert_to_readable(state))
     if move[0] == 'r':
         if move[-1] == 'L':
             new_facing = facings[(facings.index(piece.facing) - 1) % 4]
@@ -299,7 +308,7 @@ def apply_move(move, state,player):
             elif new_facing == 'NE' or new_facing == 'SW':
                 n_state[y0][x0] = globals()[f'{piece.team}dj_NE_SW']
     if move[0] == 'm':
-        x1= move_locs[2]
+        x1 = move_locs[2]
         y1 = move_locs[3]
         n_state[y1][x1] = piece
         n_state[y0][x0] = 0
@@ -321,12 +330,17 @@ def apply_move(move, state,player):
         n_state[y0][x0] = 0
         n_state[y1][x1] = globals()[f'{piece.team}sob']
 
+    return n_state
+
+
+def apply_move(move, state,player):
+    n_state = move_piece(move,state,player)
     n_state,_ = laser_eval(n_state,player)
     return n_state
 
 
 if __name__ == '__main__':
-    print(s_2_r_coords(2,3))
+    print(is_over(classic_board))
 
 
 

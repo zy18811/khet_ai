@@ -1,8 +1,11 @@
-import pygame as pyg
-import numpy
 import sys
-from ai.globals import *
+
+import numpy
+import pygame as pyg
+
 from ai.actions import get_pos_4_coords
+from ai.globals import *
+
 pyg.init()
 
 

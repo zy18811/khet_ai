@@ -1,9 +1,12 @@
+from ai.actions import get_pos_4_coords,move_piece,laser_eval
 from ai.globals import *
-from ai.actions import get_pos_4_coords
-from khetfish import Game,sys
+from khetfish import Game
+import sys
+import pygame as pyg
 
 
 def update_visuals(move,board):
+    global classic_starting
     move_locs = [int(e) for e in list(filter(str.isdigit, move))]
     x0 = move_locs[0]
     y0 = move_locs[1]
@@ -63,11 +66,13 @@ def render_background(WIN):
 
 
 def render_board(WIN):
+    global classic_starting
+
+
     scale = 1000 / 1600
     piece_width = int(128 * scale) - 2
     piece_height = int(128 * scale) - 4
 
-    render_background(WIN)
     for i in range(8):
         for j in range(10):
             if classic_starting[(i,j)] is not None:
@@ -81,7 +86,9 @@ def render_board(WIN):
     pyg.display.flip()
 
 
+
 def laser_visual(board,player_colour):
+    global super_board, super_super_board, classic_starting
     hit_target = False
     laser_start_tile = [(-1, 0), (8, 9)]
     laser_start_orientation = ["N", "S"]
@@ -95,6 +102,7 @@ def laser_visual(board,player_colour):
     cur_orientation = laser_start_orientation[player_colour]
 
     while not hit_target:
+
         try:
             next_tile = np.add(cur_tile, orientation_val[orients.index(cur_orientation)])
             x = next_tile[0]
@@ -135,7 +143,9 @@ def laser_visual(board,player_colour):
                     else:
                         super_board[x][y] = dir.joinpath("images/laser_EW.png")
                 # Play sound
+
             elif board[x][y].type == "pyr":
+
                 # Laser stuff for pyramids
                 if cur_orientation in pyramid_orientations[pyramid_facings.index(board[x][y].facing)]:
                     # Change laser direction
@@ -155,6 +165,7 @@ def laser_visual(board,player_colour):
                     # Play sound
                 else:
                     # Destroy piece
+
                     if super_board[x][y] != 0:
                         super_super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
                     else:
@@ -188,13 +199,13 @@ def laser_visual(board,player_colour):
             else:
                 # Laser stuff for Pharoahs and Obelisks
                 # Destroy piece
+                super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
                 if board[x][y].type == 'sob':
-                    if player_colour == 1:
-                        classic_starting[(x,y)] = sob.image
-                    elif player_colour ==0:
-                        classic_starting[(x,y)] = rob.image
+                    if board[x][y].team == 'r':
+                        classic_starting[(x,y)] = pyg.image.load(rob.image)
+                    elif board[x][y].team == 's':
+                        classic_starting[(x,y)] = pyg.image.load(sob.image)
                 else:
-                    super_board[x][y] = dir.joinpath("images/laser_death_%s.png" % cur_orientation)
                     classic_starting[(x,y)] = None
                 return
                 # End laser function
@@ -211,11 +222,11 @@ def clear_laser():
     super_super_board = np.zeros(shape=(8, 10), dtype=object)
 
 
-def render_laser(WIN,board,player):
+def render_laser(WIN):
+    global super_board, super_super_board
     scale = 1000 / 1600
     piece_width = int(128 * scale) - 2
     piece_height = int(128 * scale) - 4
-
     for i in range(10):
         for j in range(8):
             try:
@@ -232,8 +243,9 @@ def render_laser(WIN,board,player):
                 WIN.blit(img2, (x, y))
             except:
                 pass
-
     pyg.display.flip()
+
+
 
 
 def render_txt_game(txt_game):
@@ -249,43 +261,54 @@ def render_txt_game(txt_game):
     render_background(WIN)
     render_board(WIN)
     pyg.display.flip()
-    pyg.time.wait(2000)
+    pyg.time.wait(1000)
     board = classic_board
     player = 's'
 
+    done = False
     while True:
-        for event in pyg.event.get():
-            if event == pyg.QUIT:
-                pyg.quit()
-                sys.exit()
 
-        for move in open(txt_game,'r'):
-            pyg.event.get()
-            if move == 'DRAW' or move == 'WIN/LOSS':
-                print(move)
-            else:
-                #Game().display(board)
-                update_visuals(move,board)
-                render_board(WIN)
-                pyg.time.wait(1000)
-                #Game().display(board)
-                board = Game().get_next_board(board,move[:-1],player)
-
-                if player == 's':
-                    player_num = 1
+        if not done:
+            for move in open(txt_game,'r').readlines():
+                pyg.event.get()
+                if move == 'DRAW' or move == 'WIN/LOSS':
+                    print(move)
+                    #return
                 else:
-                    player_num = 0
+                    #pyg.time.wait(800)
+                    render_background(WIN)
+                    render_board(WIN)
+                    pyg.time.wait(800)
+                    render_background(WIN)
+                    update_visuals(move,board)
+                    render_board(WIN)
+                    pyg.time.wait(800)
 
-                laser_visual(board,player_num)
-                render_laser(WIN,board,player)
-                pyg.time.wait(1000)
+                    if player == 's':
+                        player_num = 1
+                    else:
+                        player_num = 0
 
-                clear_laser()
-                render_laser(WIN,board,player)
+                    after_move_board = move_piece(move[:-1],board,player)
+                    laser_visual(after_move_board,player_num)
+                    render_laser(WIN)
+                    pyg.time.wait(800)
 
-                player = Game().reverse_player(player)
-                pyg.event.pump()
-                pyg.time.wait(1000)
+                    clear_laser()
+                    render_laser(WIN)
+
+                    #render_board(WIN)
+                    #pyg.display.flip()
+
+                    board,_ = laser_eval(after_move_board,player)
+                    player = Game().reverse_player(player)
+                    pyg.event.pump()
+                    pyg.time.wait(800)
+
+            print("Game Incomplete")
+        done = True
+
+
 
 if __name__ == '__main__':
-    render_txt_game('')
+    render_txt_game('450838df53e048e4aab74dd883156ca5.txt')

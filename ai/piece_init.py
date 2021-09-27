@@ -1,7 +1,7 @@
-import pathlib
 import os
+import pathlib
+
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
-import pygame as pyg
 dir = pathlib.Path(__file__).parent.parent
 
 class Piece:

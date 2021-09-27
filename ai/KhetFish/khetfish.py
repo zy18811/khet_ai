@@ -1,13 +1,17 @@
-import numpy as np
-from tqdm import tqdm
-from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, get_pos_4_coords, laser_shoot
-from ai.globals import *
 import uuid
 from multiprocessing import Pool, cpu_count
-import sys
+
+import numpy as np
+from tqdm import tqdm
+
+from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, \
+    laser_shoot, is_over
+from ai.globals import *
+
 
 class Game:
     def __init__(self,evalulate_position = None):
+        self.board_caches = {}
         if evalulate_position is not None:
             self.evaluate_position = evalulate_position
 
@@ -74,7 +78,6 @@ class Game:
                     pos_score -= 1
             except:
                 pass
-
         return pos_score
 
     # TODO: make faster
@@ -93,8 +96,8 @@ class Game:
             self.display(mirror_state(board))
             raise e
 
-    def isTerminal(self, board,player):
-        return is_terminal(board,player)
+    def isTerminal(self, board):
+        return is_over(board)
 
     def reverse_player(self,player):
         if player == 's':
@@ -103,58 +106,78 @@ class Game:
             return 's'
 
     def mm(self,move, board,depth,isMaximizing,player):
-        board = self.get_next_board(board,move,player)
+        board = self.get_next_board(board, move,player)
         value = self.minimax(depth - 1, board, -np.inf, np.inf, not isMaximizing, player)
+        self.board_caches[self.hash_board(board, depth-1, not isMaximizing, )] = value
         return [value, move]
 
     def mmWrapper(self,args):
         return self.mm(*args)
 
-
-    def minimaxRoot(self, depth, board, isMaximizing,player):
+    def minimaxRoot(self, depth, board,isMaximizing,player):
         possibleMoves = self.valid_moves(board,player)
-        bestMove = -np.inf
-        bestMoveFinal = None
 
-        args = [(move,board,depth,isMaximizing,player) for move in possibleMoves]
+        d1_res = np.array([self.mm(move,board,1,isMaximizing,player) for move in possibleMoves])
+        d1_moves = d1_res[:,1][d1_res[:,0].argsort()]
+        """
+        """
+        perc = 0.33
+        """
+        """
+        pos_moves = d1_moves[:int(perc*len(d1_moves))]
+
+        args = [(move,board,depth,isMaximizing,player) for move in pos_moves]
 
         threads = cpu_count()
         with Pool(threads) as p:
             bestMoveList = np.array(list(tqdm(p.imap(self.mmWrapper, args), total=len(args))))
         return bestMoveList[:,1][np.argmax(bestMoveList[:,0])]
 
+    def minimax(self,depth, board, alpha, beta, is_maximizing,player):
 
-    def minimax(self,depth, board, alpha, beta, is_maximizing, player):
+        if self.hash_board(board,depth,is_maximizing) in self.board_caches:
+            return self.board_caches[self.hash_board(board, depth, is_maximizing)]
 
-        if (depth == 0) or self.isTerminal(board,player):
-            return self.evaluate_position(board,player)
+        if (depth == 0) or self.isTerminal(board):
 
-        possibleMoves = self.valid_moves(board,player)
-        if (is_maximizing):
+            self.board_caches[self.hash_board(board, depth, is_maximizing)] = self.evaluate_position(board, player)
+            return -self.evaluate_position(board,player)
+
+
+        possibleMoves = self.valid_moves(board,player) if is_maximizing else self.valid_moves(board, self.reverse_player(player))
+
+        if is_maximizing:
             bestMove = -np.inf
             for x in possibleMoves:
                 move = x
                 old_board = deepcopy(board)
                 board = self.get_next_board(board,move,player)
                 bestMove = max(bestMove, self.minimax(depth - 1, board, alpha, beta, not is_maximizing,player))
+                self.board_caches[self.hash_board(board,depth-1,not is_maximizing)] = bestMove
+
                 board = old_board
-                alpha = np.maximum(alpha, bestMove)
+                alpha = max(alpha, bestMove)
                 if beta <= alpha:
                     return bestMove
             return bestMove
         else:
             bestMove = np.inf
+            player = self.reverse_player(player)
             for x in possibleMoves:
                 move = x
                 old_board = deepcopy(board)
-                board = self.get_next_board(board, move,player)
-
+                board = self.get_next_board(board,move,player)
                 bestMove = min(bestMove, self.minimax(depth - 1, board, alpha, beta, not is_maximizing,player))
+                self.board_caches[self.hash_board(board, depth-1, not is_maximizing)] = bestMove
+
                 board = old_board
-                beta = np.minimum(beta, bestMove)
+                beta = min(beta, bestMove)
                 if (beta <= alpha):
                     return bestMove
             return bestMove
+
+    def hash_board(self,board,depth, isMaximising):
+        return convert_to_readable(board) + ' ' + str(depth) + ' ' + str(isMaximising)
 
     def display(self,board):
         print(convert_to_readable(board))
@@ -163,32 +186,34 @@ class Game:
 def playGame(depth):
     game = Game()
     board = classic_board
-    #game.display(board)
+
     player = 's'
     move_n = 1
     file_id = str(uuid.uuid4().hex)+'.txt'
-    while not game.isTerminal(board,player):
+    while not game.isTerminal(board):
         best = game.minimaxRoot(depth, board, True, player)
-        new_board = game.get_next_board(board, best, 's')
+        new_board = game.get_next_board(board, best, player)
+
         player = game.reverse_player(player)
         board = new_board
 
         open(file_id,'a').write(best+'\n')
-        #game.display(board)
         if move_n == 100:
             open(file_id, 'a').write('DRAW')
             return
         move_n+=1
+
     open(file_id,'a').write('WIN/LOSS')
-    #game.display(board)
+
     return
 
 
-
-
-
 if __name__ == '__main__':
-    #playGame(3)
-    render_txt_game('b78fd726f8a44ff69918bae5363df9fd.txt')
+    playGame(3)
+
+
+
+
+
 
 

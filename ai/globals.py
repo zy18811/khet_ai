@@ -1,5 +1,5 @@
 import numpy as np
-
+import pygame as pyg
 from ai.piece_init import *
 
 classic_starting = {(0,0):None, (0,1):None, (0,2):None, (0,3):None, (0,4):pyg.image.load(rsob.image), (0,5):pyg.image.load(rpha.image),
