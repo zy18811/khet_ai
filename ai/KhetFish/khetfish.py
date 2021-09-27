@@ -1,6 +1,6 @@
 import uuid
 from multiprocessing import Pool, cpu_count
-
+import pickle
 import numpy as np
 from tqdm import tqdm
 
@@ -12,6 +12,10 @@ from ai.globals import *
 class Game:
     def __init__(self,evalulate_position = None):
         self.board_caches = {}
+        try:
+            self.board_caches = pickle.load(open('board_caches.pkl','rb'))
+        except:
+            pass
         if evalulate_position is not None:
             self.evaluate_position = evalulate_position
 
@@ -78,7 +82,8 @@ class Game:
                     pos_score -= 1
             except:
                 pass
-        return pos_score
+
+        return pos_score + np.random.normal(0,0.3)
 
     # TODO: make faster
     def valid_moves(self,board,player):
@@ -189,7 +194,7 @@ def playGame(depth):
 
     player = 's'
     move_n = 1
-    file_id = str(uuid.uuid4().hex)+'.txt'
+    file_id = str(uuid.uuid4().hex)+f'_depth_{depth}'+'.txt'
     while not game.isTerminal(board):
         best = game.minimaxRoot(depth, board, True, player)
         new_board = game.get_next_board(board, best, player)
@@ -199,19 +204,22 @@ def playGame(depth):
 
         open(file_id,'a').write(best+'\n')
         if move_n == 100:
+            pickle.dump(game.board_caches, open('board_caches.pkl','wb'),pickle.HIGHEST_PROTOCOL)
             open(file_id, 'a').write('DRAW')
             return
         move_n+=1
 
-    open(file_id,'a').write('WIN/LOSS')
+    pickle.dump(game.board_caches, open('board_caches.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
+    if np.sum(np.isin([f'{p.team} {p.type}' for row in board for p in row if p != 0], ['s pha'])) == 0:
+        open(file_id, 'a').write('RED WIN')
+    elif np.sum(np.isin([f'{p.team} {p.type}' for row in board for p in row if p != 0], ['r pha'])) == 0:
+        open(file_id,'a').write('SILVER WIN')
 
     return
 
 
 if __name__ == '__main__':
-    playGame(3)
-
-
+    playGame(4)
 
 
 
