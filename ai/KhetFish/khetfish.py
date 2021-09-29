@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, \
     laser_shoot, is_over
-from ai.globals import *
-
+from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, laser_shoot
+import ai.evaluations as eval_funcs
 
 class Game:
     def __init__(self,evalulate_position = None):
@@ -21,69 +21,25 @@ class Game:
 
     # TODO: better evaluation
     def evaluate_position(self,board,player):
-        pos_score = 0
-        player_pha_i = 0
-        player_pha_j = 0
-        enemy_pha_i = 0
-        enemy_pha_j = 0
-        # Positional evaluation
-        for i in range(8):
-            for j in range(10):
-                piece = board[i][j]
 
-                # Calculates value for each pyramid existing and its position
-                if piece != 0:
-                    if piece.type == 'pyr':
-                        if piece.team == player:
-                            pos_score += piece.value
-                        elif piece.team != player:
-                            pos_score -= piece.value
-
-                    # Calculates value for Obelisk's existing
-                    elif piece.type == 'ob' or piece.type == 'sob':
-                        if piece.team == player:
-                            pos_score += piece.value
-                        elif piece.team != player:
-                            pos_score -= piece.value
-                    # Calculates value for Djed's positions
-                    elif piece.type == 'dj':
-                        pass
-                    # Stores the location of the Pharoahs
-                    elif piece.type == 'pha':
-                        if piece.team == player:
-                            pos_score += piece.value
-                            player_pha_i = i
-                            player_pha_j = j
-                        elif piece.team != player:
-                            pos_score -= piece.value
-                            enemy_pha_i = i
-                            enemy_pha_j = j
-                    else:
-                        pass
-                else:
-                    pass
+        # Value of the pieces and location data is evaluated
+        score = eval_funcs.piecevalue_evaluation(board, player)[0]
+        location_data = eval_funcs.piecevalue_evaluation(board, player)[1]
 
         # Laser Manhattan Evaluation
-        laser_shoot_data = laser_shoot(board, player)
-        manhattan_score = abs(laser_shoot_data[0]-enemy_pha_i + laser_shoot_data[1]-enemy_pha_j)
-        pos_score -= manhattan_score / 4
+        score -= eval_funcs.laser_depth(board, player, location_data)
 
-        # King Safety Evaluation
-        directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
-        for direction in directions:
-            try:
-                piece = board(player_pha_i+direction[0], player_pha_j+direction[1])
-                if piece != 0:
-                    if piece.type == 'ob':
-                        pos_score += piece.value
-                    elif piece.type == 'sob':
-                        pos_score += piece.value
-                else:
-                    pos_score -= 1
-            except:
-                pass
+        # Pharoah Defense Evaluation
+        score += eval_funcs.pharoah_defense(board, player, location_data)
 
-        return pos_score + np.random.normal(0,0.3)
+        # Pharoah Offense Evaluation
+
+        # Pyramid Safety Evaluation
+
+        #
+
+        return score + np.random.normal(0,0.3)
+
 
     # TODO: make faster
     def valid_moves(self,board,player):
@@ -220,8 +176,6 @@ def playGame(depth):
 
 if __name__ == '__main__':
     playGame(4)
-
-
 
 
 
