@@ -51,7 +51,7 @@ def update_visuals(move,board):
 
     elif move[:2] == 'st':
         x1 = move_locs[2]
-        y1 = move_locs[2]
+        y1 = move_locs[3]
 
         classic_starting[(y0,x0)] = None
         classic_starting[(y1,x1)] = li(globals()[f'{piece.team}sob'].image)
@@ -270,8 +270,9 @@ def render_txt_game(txt_game):
 
         if not done:
             for move in open(txt_game,'r').readlines():
+
                 pyg.event.get()
-                if move == 'DRAW' or move == 'WIN/LOSS':
+                if move == 'DRAW' or move == 'RED WIN' or move == 'SILVER WIN':
                     print(move)
                     #return
                 else:
@@ -289,7 +290,8 @@ def render_txt_game(txt_game):
                     else:
                         player_num = 0
 
-                    after_move_board = move_piece(move[:-1],board,player)
+
+                    after_move_board = move_piece(move[:-1],board)
                     laser_visual(after_move_board,player_num)
                     render_laser(WIN)
                     pyg.time.wait(800)
@@ -311,4 +313,4 @@ def render_txt_game(txt_game):
 
 
 if __name__ == '__main__':
-    render_txt_game('a8206001971c4c34b2efafc9465e389a_depth_4.txt')
+    render_txt_game('f3967cf49b504d5cade2744690b47548_depth_2.txt')

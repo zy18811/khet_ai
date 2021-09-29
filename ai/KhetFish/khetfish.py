@@ -66,76 +66,74 @@ class Game:
         else:
             return 's'
 
-    def mm(self,move, board,depth,isMaximizing,player):
-        board = self.get_next_board(board, move,player)
-        value = self.minimax(depth - 1, board, -np.inf, np.inf, not isMaximizing, player)
-        self.board_caches[self.hash_board(board, depth-1, not isMaximizing, )] = value
-        return [value, move]
+    def top_perc_pos_moves(self,board,player,perc):
+        possibleMoves = self.valid_moves(board, player)
+        move_and_ev = np.array([(move,self.evaluate_position(self.get_next_board(board,move,player),player)) for move in possibleMoves])
+        return move_and_ev[move_and_ev[:,1].argsort()][:,0][:int(perc*len(move_and_ev))]
+
+    def mm(self,depth,board,move,is_ai_silver,player):
+        board = self.get_next_board(board,move,player)
+        local_score = self.minimax(depth - 1, board, not is_ai_silver, -np.inf, np.inf, self.reverse_player(player))
+        return local_score, move
 
     def mmWrapper(self,args):
         return self.mm(*args)
 
-    def minimaxRoot(self, depth, board,isMaximizing,player):
-        possibleMoves = self.valid_moves(board,player)
+    def ai_move(self,depth,board,player):
+        is_ai_silver = True if player == 's' else False
 
-        d1_res = np.array([self.mm(move,board,1,isMaximizing,player) for move in possibleMoves])
-        d1_moves = d1_res[:,1][d1_res[:,0].argsort()]
-        """
-        """
-        perc = 0.33
-        """
-        """
-        pos_moves = d1_moves[:int(perc*len(d1_moves))]
-
-        args = [(move,board,depth,isMaximizing,player) for move in pos_moves]
+        legal_moves = self.top_perc_pos_moves(board,player,0.33)
+        args = [(depth,board,move,is_ai_silver,player) for move in legal_moves]
 
         threads = cpu_count()
         with Pool(threads) as p:
             bestMoveList = np.array(list(tqdm(p.imap(self.mmWrapper, args), total=len(args))))
-        return bestMoveList[:,1][np.argmax(bestMoveList[:,0])]
 
-    def minimax(self,depth, board, alpha, beta, is_maximizing,player):
+        pickle.dump(self.board_caches, open('board_caches.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
 
-        if self.hash_board(board,depth,is_maximizing) in self.board_caches:
-            return self.board_caches[self.hash_board(board, depth, is_maximizing)]
-
-        if (depth == 0) or self.isTerminal(board):
-
-            self.board_caches[self.hash_board(board, depth, is_maximizing)] = self.evaluate_position(board, player)
-            return -self.evaluate_position(board,player)
-
-
-        possibleMoves = self.valid_moves(board,player) if is_maximizing else self.valid_moves(board, self.reverse_player(player))
-
-        if is_maximizing:
-            bestMove = -np.inf
-            for x in possibleMoves:
-                move = x
-                old_board = deepcopy(board)
-                board = self.get_next_board(board,move,player)
-                bestMove = max(bestMove, self.minimax(depth - 1, board, alpha, beta, not is_maximizing,player))
-                self.board_caches[self.hash_board(board,depth-1,not is_maximizing)] = bestMove
-
-                board = old_board
-                alpha = max(alpha, bestMove)
-                if beta <= alpha:
-                    return bestMove
-            return bestMove
+        if is_ai_silver:
+            return bestMoveList[:, 1][np.argmax(bestMoveList[:, 0])]
         else:
-            bestMove = np.inf
-            player = self.reverse_player(player)
-            for x in possibleMoves:
-                move = x
-                old_board = deepcopy(board)
-                board = self.get_next_board(board,move,player)
-                bestMove = min(bestMove, self.minimax(depth - 1, board, alpha, beta, not is_maximizing,player))
-                self.board_caches[self.hash_board(board, depth-1, not is_maximizing)] = bestMove
+            return bestMoveList[:, 1][np.argmin(bestMoveList[:, 0])]
 
-                board = old_board
-                beta = min(beta, bestMove)
-                if (beta <= alpha):
-                    return bestMove
-            return bestMove
+    def minimax(self, depth,board, is_maxing_silver, alpha, beta,player):
+        # if board in cache
+        if self.hash_board(board,depth, is_maxing_silver) in self.board_caches:
+            return self.board_caches[self.hash_board(board,depth, is_maxing_silver)]
+
+        # if depth is 0 or game is over
+        if depth == 0 or self.isTerminal(board):
+            if is_maxing_silver:
+                self.board_caches[self.hash_board(board,depth, is_maxing_silver)] = self.evaluate_position(board,player)
+            else:
+                self.board_caches[self.hash_board(board, depth, is_maxing_silver)] = self.evaluate_position(board,self.reverse_player(player))
+            return self.board_caches[self.hash_board(board,depth, is_maxing_silver)]
+
+        # else
+        best_score = -np.inf if is_maxing_silver else np.inf
+        
+        for move in self.valid_moves(board,player):
+            old_board = deepcopy(board)
+            board = self.get_next_board(board,move,player)
+
+            local_score = self.minimax(depth - 1,board, not is_maxing_silver, alpha,beta,self.reverse_player(player))
+            self.board_caches[self.hash_board(board,depth - 1, not is_maxing_silver)] = local_score
+
+            if is_maxing_silver:
+                best_score = max(best_score, local_score)
+                alpha = max(alpha, best_score)
+            else:
+                best_score = min(best_score, local_score)
+                beta = min(beta, best_score)
+
+            board = old_board
+
+            if beta <= alpha:
+                break
+                
+        self.board_caches[self.hash_board(board,depth, is_maxing_silver)] = best_score
+        return self.board_caches[self.hash_board(board,depth, is_maxing_silver)]
+
 
     def hash_board(self,board,depth, isMaximising):
         return convert_to_readable(board) + ' ' + str(depth) + ' ' + str(isMaximising)
@@ -149,10 +147,11 @@ def playGame(depth):
     board = classic_board
 
     player = 's'
+
     move_n = 1
     file_id = str(uuid.uuid4().hex)+f'_depth_{depth}'+'.txt'
     while not game.isTerminal(board):
-        best = game.minimaxRoot(depth, board, True, player)
+        best = game.ai_move(depth,board,player)
         new_board = game.get_next_board(board, best, player)
 
         player = game.reverse_player(player)
@@ -175,7 +174,8 @@ def playGame(depth):
 
 
 if __name__ == '__main__':
-    playGame(4)
+    #print(Game().evaluate_position(classic_board,'r'))
+    playGame(2)
 
 
 
