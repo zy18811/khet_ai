@@ -1,13 +1,11 @@
 import uuid
 from multiprocessing import Pool, cpu_count
 import pickle
-import numpy as np
 from tqdm import tqdm
-
-from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, \
-    laser_shoot, is_over
-from ai.actions import convert_to_readable, is_terminal, possible_actions_4_state, apply_move, deepcopy, mirror_state, laser_shoot
+from ai.actions import convert_to_readable, possible_actions_4_state, apply_move, deepcopy, mirror_state, is_over
 import ai.evaluations as eval_funcs
+from ai.globals import *
+
 
 class Game:
     def __init__(self,evalulate_position = None):
@@ -23,8 +21,7 @@ class Game:
     def evaluate_position(self, board, player):
 
         # Value of the pieces and location data is evaluated
-        score = eval_funcs.piecevalue_evaluation(board, player)[0]
-        location_data = eval_funcs.piecevalue_evaluation(board, player)[1]
+        score, location_data = eval_funcs.piecevalue_evaluation(board, player)
 
         # Laser Manhattan Evaluation
         score -= eval_funcs.laser_depth(board, player, location_data)
@@ -40,7 +37,7 @@ class Game:
 
         #
 
-        return score + np.random.normal(0,0.3)
+        return score + np.random.normal(0,0.25)
 
 
     # TODO: make faster
@@ -71,32 +68,36 @@ class Game:
     def top_perc_pos_moves(self,board,player,perc):
         possibleMoves = self.valid_moves(board, player)
         move_and_ev = np.array([(move,self.evaluate_position(self.get_next_board(board,move,player),player)) for move in possibleMoves])
-        return move_and_ev[move_and_ev[:,1].argsort()][:,0][:int(perc*len(move_and_ev))]
+        return move_and_ev[move_and_ev[:,1].astype(float).argsort()[::-1]][:,0][:int(perc*len(move_and_ev))]
 
     def mm(self,depth,board,move,is_ai_silver,player):
         board = self.get_next_board(board,move,player)
         local_score = self.minimax(depth - 1, board, not is_ai_silver, -np.inf, np.inf, self.reverse_player(player))
-        return local_score, move
+        return local_score,move
 
     def mmWrapper(self,args):
         return self.mm(*args)
 
     def ai_move(self,depth,board,player):
-        is_ai_silver = True if player == 's' else False
 
         legal_moves = self.top_perc_pos_moves(board,player,0.33)
-        args = [(depth,board,move,is_ai_silver,player) for move in legal_moves]
+        args = [(depth,board,move,True,player) for move in legal_moves]
 
         threads = cpu_count()
         with Pool(threads) as p:
-            bestMoveList = np.array(list(tqdm(p.imap(self.mmWrapper, args), total=len(args))))
+            bestMoveList = np.array(list(tqdm(p.imap(self.mmWrapper, args), total=len(args),desc = f'{player}',
+                                              colour = 'WHITE' if player == 's' else 'RED')))
 
         pickle.dump(self.board_caches, open('board_caches.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
 
-        if is_ai_silver:
-            return bestMoveList[:, 1][np.argmax(bestMoveList[:, 0])]
-        else:
-            return bestMoveList[:, 1][np.argmin(bestMoveList[:, 0])]
+        #print(bestMoveList)
+
+        return bestMoveList[:, 1][bestMoveList[:, 0].astype(float).argsort()][-1]
+
+
+
+        #return bestMoveList[:, 1][bestMoveList[:, 0].astype(float).argsort()][-1]
+
 
     def minimax(self, depth,board, is_maxing_silver, alpha, beta,player):
         # if board in cache
@@ -105,10 +106,12 @@ class Game:
 
         # if depth is 0 or game is over
         if depth == 0 or self.isTerminal(board):
-            if is_maxing_silver:
-                self.board_caches[self.hash_board(board,depth, is_maxing_silver)] = self.evaluate_position(board,player)
+
+            if self.isTerminal(board) and not is_maxing_silver:
+                self.board_caches[self.hash_board(board, depth, is_maxing_silver)] = self.evaluate_position(board,
+                                                                                                            self.reverse_player(player))
             else:
-                self.board_caches[self.hash_board(board, depth, is_maxing_silver)] = self.evaluate_position(board,self.reverse_player(player))
+                self.board_caches[self.hash_board(board,depth, is_maxing_silver)] = self.evaluate_position(board,player)
             return self.board_caches[self.hash_board(board,depth, is_maxing_silver)]
 
         # else
@@ -135,7 +138,6 @@ class Game:
                 
         self.board_caches[self.hash_board(board,depth, is_maxing_silver)] = best_score
         return self.board_caches[self.hash_board(board,depth, is_maxing_silver)]
-
 
     def hash_board(self,board,depth, isMaximising):
         return convert_to_readable(board) + ' ' + str(depth) + ' ' + str(isMaximising)
@@ -176,8 +178,9 @@ def playGame(depth):
 
 
 if __name__ == '__main__':
-    #print(Game().evaluate_position(classic_board,'r'))
-    playGame(2)
+    #print(Game().evaluate_position(classic_board,'s'))
+    playGame(3)
+
 
 
 

@@ -5,7 +5,7 @@ from numpy import *
 
 
 def piecevalue_evaluation(board, player):
-    location_data = []
+    location_data = [0]*4
     score = 0
     for i in range(8):
         for j in range(10):
