@@ -5,7 +5,7 @@ from numpy import *
 
 
 def piecevalue_evaluation(board, player):
-    location_data = []
+    location_data = [0]*4
     score = 0
     for i in range(8):
         for j in range(10):
@@ -47,10 +47,10 @@ def piecevalue_evaluation(board, player):
 
 
 def laser_depth(board, player, location_data):
-
+    score = 0
     lasershoot_data = laser_shoot(board, player)
     manhattan_score = abs(lasershoot_data[0] - location_data[2] + lasershoot_data[1] - location_data[3])
-    score = manhattan_score / 10
+    score -= manhattan_score / 10
 
     return score
 
@@ -97,4 +97,16 @@ def pharoah_defense2(board, player, location_data):
 
     return score
 
+
+def threat1(board, player):
+    # Evaluating one move threats
+    score = 0
+    coords = laser_shoot(board, player)
+    if coords[2]:
+        if board[coords[0], coords[1]].team == player:
+            score -= 1
+        else:
+            score += 1
+
+    return score
 

@@ -266,14 +266,16 @@ def render_txt_game(txt_game):
     player = 's'
 
     done = False
-    while True:
 
+    while True:
+        complete = False
         if not done:
             for move in open(txt_game,'r').readlines():
 
                 pyg.event.get()
                 if move == 'DRAW' or move == 'RED WIN' or move == 'SILVER WIN':
                     print(move)
+                    complete = True
                     #return
                 else:
                     #pyg.time.wait(800)
@@ -307,10 +309,10 @@ def render_txt_game(txt_game):
                     pyg.event.pump()
                     pyg.time.wait(800)
 
-            print("Game Incomplete")
+            if not complete: print("Game Incomplete")
         done = True
 
 
 
 if __name__ == '__main__':
-    render_txt_game('f3967cf49b504d5cade2744690b47548_depth_2.txt')
+    render_txt_game('cc349a8f75c64aa4b7129110b8c59ee2_depth_2.txt')
