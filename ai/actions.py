@@ -285,7 +285,7 @@ def is_over(board):
         return True
 
 
-def move_piece(move,state,player):
+def move_piece(move,state):
     n_state = deepcopy(state)
 
     facings = ['NE', 'SE', 'SW', 'NW']
@@ -326,7 +326,7 @@ def move_piece(move,state,player):
 
     elif move[:2] == 'st':
         x1 = move_locs[2]
-        y1 = move_locs[2]
+        y1 = move_locs[3]
         n_state[y0][x0] = 0
         n_state[y1][x1] = globals()[f'{piece.team}sob']
 
@@ -334,7 +334,7 @@ def move_piece(move,state,player):
 
 
 def apply_move(move, state,player):
-    n_state = move_piece(move,state,player)
+    n_state = move_piece(move,state)
     n_state,_ = laser_eval(n_state,player)
     return n_state
 
