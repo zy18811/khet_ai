@@ -9,6 +9,7 @@ from ai.globals import *
 
 class Game:
     def __init__(self,evalulate_position = None):
+        self.depth_even = None
         self.board_caches = {}
         try:
             self.board_caches = pickle.load(open('board_caches.pkl','rb'))
@@ -79,7 +80,7 @@ class Game:
         return self.mm(*args)
 
     def ai_move(self,depth,board,player):
-
+        self.depth_even = True if depth%2 else False
         legal_moves = self.top_perc_pos_moves(board,player,0.33)
         args = [(depth,board,move,True,player) for move in legal_moves]
 
@@ -107,7 +108,7 @@ class Game:
         # if depth is 0 or game is over
         if depth == 0 or self.isTerminal(board):
 
-            if self.isTerminal(board) and not is_maxing_silver:
+            if self.isTerminal(board) and self.depth_even and not is_maxing_silver:
                 self.board_caches[self.hash_board(board, depth, is_maxing_silver)] = self.evaluate_position(board,
                                                                                                             self.reverse_player(player))
             else:
