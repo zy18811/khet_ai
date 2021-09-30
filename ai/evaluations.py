@@ -55,20 +55,46 @@ def laser_depth(board, player, location_data):
     return score
 
 
-def pharoah_defense(board, player, location_data):
+def pharoah_defense1(board, player, location_data):
+    # Checking the Pharoah defense with depth 1
     directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
     score = 0
     for direction in directions:
         try:
             piece = board(location_data[0] + direction[0], location_data[1] + direction[1])
             if piece != 0:
-                if piece.type == 'ob':
+                if piece.team == player:
                     score += piece.value
-                elif piece.type == 'sob':
-                    score += piece.value
+                elif piece.type == 'dj':
+                    score -= 1
+                else:
+                    score -= piece.value
             else:
                 score -= 1
         except:
             pass
+
     return score
+
+
+def pharoah_defense2(board, player, location_data):
+    # Doing a double orthogonal calculation
+    directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+    score = 0
+    for first_direction in directions:
+        for second_direction in directions:
+            try:
+                piece = board(location_data[0] + first_direction[0] + second_direction[0], location_data[1]+first_direction[1]+second_direction[1])
+                if piece != 0 and piece.type != 'pha':
+                    if piece.team == player:
+                        score += piece.value * 0.5
+                    else:
+                        score -= piece.value * 0.5
+                else:
+                    pass
+            except:
+                pass
+
+    return score
+
 
