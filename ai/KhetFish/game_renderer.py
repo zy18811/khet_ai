@@ -315,4 +315,4 @@ def render_txt_game(txt_game):
 
 
 if __name__ == '__main__':
-    render_txt_game('e5f2f94a34c3463e9f06ede4b5e2d8f8_depth_3.txt')
+    render_txt_game('ab3ca358852040c1b1393ba8ff167d7a_depth_2.txt')

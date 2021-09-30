@@ -103,7 +103,7 @@ def threat1(board, player):
     score = 0
     coords = laser_shoot(board, player)
     if coords[2]:
-        if board[coords[0], coords[1]].team == player:
+        if board[coords[1]][coords[0]].team == player:
             score -= 1
         else:
             score += 1

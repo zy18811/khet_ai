@@ -178,7 +178,7 @@ def playGame(depth):
 
 if __name__ == '__main__':
     #print(Game().evaluate_position(classic_board,'s'))
-    playGame(3)
+    playGame(2)
 
 
 
