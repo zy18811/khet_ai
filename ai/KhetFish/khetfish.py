@@ -37,7 +37,7 @@ class Game:
         # n-Threat Evaluation
 
         # Perulok evaluation
-        score += eval_funcs.perulok_eval(board, player)
+        #score += eval_funcs.perulok_eval(board, player)
 
         return score + np.random.normal(0,0.25)
 
