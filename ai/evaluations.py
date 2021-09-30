@@ -118,21 +118,25 @@ def perulok_eval(board, player):
     r_rows = [0, 1]
     columns = range(0, 7)
 
-    while counter <= 3:
-        if player == 's':
-            for x in s_rows:
-                for y in columns:
-                    z = board[x][y]
+    if player == 's':
+        for x in s_rows:
+            for y in columns:
+                z = board[y][x]
+                if counter < 3:
                     if z != 0 and z.team == 's' and ((z.type == 'pyr' and z.facing == 'SW') or (z.type == 'dj' and z.facing == 'NE')):
                         score += 1
-                        counter +=1
-        else:
-            for x in r_rows:
-                for y in columns:
-                    z = board[x][y]
+                        counter += 1
+                else:
+                    score -= 1
+    else:
+        for x in r_rows:
+            for y in columns:
+                z = board[y][x]
+                if counter < 3:
                     if z != 0 and z.team == 'r' and ((z.type == 'pyr' and z.facing == 'NE') or (z.type == 'dj' and z.facing == 'NE')):
                         score += 1
                         counter += 1
-
+                else:
+                    score -= 1
     return score
 
