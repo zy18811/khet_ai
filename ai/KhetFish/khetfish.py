@@ -21,12 +21,7 @@ class Game:
     def evaluate_position(self, board, player):
         score = 0
         # Value of the pieces and location data is evaluated
-<<<<<<< HEAD
-        score += eval_funcs.piecevalue_evaluation(board, player)[0]
-        location_data = eval_funcs.piecevalue_evaluation(board, player)[1]
-=======
         score, location_data = eval_funcs.piecevalue_evaluation(board, player)
->>>>>>> ai
 
         # Laser Manhattan Evaluation
         score += eval_funcs.laser_depth(board, player, location_data)
@@ -43,7 +38,6 @@ class Game:
         # Pereulok evaluation
 
         return score + np.random.normal(0,0.25)
-
 
     # TODO: make faster
     def valid_moves(self,board,player):
