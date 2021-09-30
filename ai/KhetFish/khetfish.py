@@ -20,22 +20,17 @@ class Game:
 
     # TODO: better evaluation
     def evaluate_position(self, board, player):
-        score = 0
         # Value of the pieces and location data is evaluated
         score, location_data = eval_funcs.piecevalue_evaluation(board, player)
-
         # Laser Manhattan Evaluation
         score += eval_funcs.laser_depth(board, player, location_data)
-
-        # Pharoah Defense Evaluation
+        # Pharoah Defense Evaluations
         score += eval_funcs.pharoah_defense1(board, player, location_data)
         score += eval_funcs.pharoah_defense2(board, player, location_data)
-
         # 1-Threat Evaluation
         score += eval_funcs.threat1(board, player)
-
         # n-Threat Evaluation
-
+        score += eval_funcs.threatN(board, player)
         # Perulok evaluation
         score += eval_funcs.perulok_eval(board, player)
 

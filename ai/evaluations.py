@@ -104,9 +104,15 @@ def threat1(board, player):
     coords = laser_shoot(board, player)
     if coords[2]:
         if board[coords[1]][coords[0]].team == player:
-            score -= 1
+            score -= 2
         else:
-            score += 1
+            score += 2
+
+    return score
+
+
+def threatN(board, player):
+    score = 0
 
     return score
 
@@ -122,21 +128,21 @@ def perulok_eval(board, player):
         for x in s_rows:
             for y in columns:
                 z = board[y][x]
-                if counter < 3:
+                if counter <= 3:
                     if z != 0 and z.team == 's' and ((z.type == 'pyr' and z.facing == 'SW') or (z.type == 'dj' and z.facing == 'NE')):
-                        score += 1
+                        score += 2
                         counter += 1
                 else:
-                    score -= 1
+                    score -= 2
     else:
         for x in r_rows:
             for y in columns:
                 z = board[y][x]
-                if counter < 3:
+                if counter <= 3:
                     if z != 0 and z.team == 'r' and ((z.type == 'pyr' and z.facing == 'NE') or (z.type == 'dj' and z.facing == 'NE')):
-                        score += 1
+                        score += 2
                         counter += 1
                 else:
-                    score -= 1
+                    score -= 2
     return score
 
